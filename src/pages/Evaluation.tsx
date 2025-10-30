@@ -80,7 +80,7 @@ const Evaluation = () => {
 
   return (
     <div className="min-h-screen p-6 pt-28 pb-40 flex flex-col animate-fade-in">
-      <FixedHeader currentStep={4} totalSteps={6} backTo="/materials" title="Evaluación" />
+      <FixedHeader currentStep={5} totalSteps={7} backTo="/materials" title="Evaluación" />
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col">
         
         <div className="flex-1 flex flex-col justify-center space-y-12">

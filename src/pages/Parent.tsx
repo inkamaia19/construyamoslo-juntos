@@ -43,12 +43,12 @@ const Parent = () => {
       parent_phone: phone.trim(),
       parent_email: email.trim(),
     });
-    navigate("/child", { replace: true });
+    navigate("/welcome", { replace: true });
   };
 
   return (
     <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
-      <FixedHeader currentStep={1} totalSteps={6} backTo="/intro" title="Datos del padre/madre" />
+      <FixedHeader currentStep={1} totalSteps={7} backTo="/intro" title="Datos del padre/madre" />
       <div className="max-w-3xl mx-auto space-y-8">
         <div className="text-center space-y-2">
           <h2 className="text-4xl md:text-5xl font-bold">Para acompañarte mejor</h2>

@@ -91,7 +91,7 @@ const Materials = () => {
 
   return (
     <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
-      <FixedHeader currentStep={3} totalSteps={6} backTo="/child" title="Materiales" />
+      <FixedHeader currentStep={4} totalSteps={7} backTo="/child" title="Materiales" />
       <div className="max-w-4xl mx-auto space-y-8">
         
         <div className="space-y-4 text-center animate-slide-up">

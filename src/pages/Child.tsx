@@ -51,7 +51,7 @@ const Child = () => {
 
   return (
     <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
-      <FixedHeader currentStep={2} totalSteps={6} backTo="/parent" title="Datos del niño" />
+      <FixedHeader currentStep={3} totalSteps={7} backTo="/welcome" title="Datos del niño" />
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-4 text-center">
           <h2 className="text-4xl md:text-5xl font-bold">Conozcamos un poco a tu explorador</h2>
