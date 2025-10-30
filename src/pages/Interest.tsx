@@ -1,0 +1,84 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import ProgressBar from "@/components/ProgressBar";
+import type { Interest as InterestType } from "@/types/onboarding";
+import { cn } from "@/lib/utils";
+
+const interests = [
+  { id: "art_coloring" as InterestType, emoji: "🎨", label: "Colores y arte", color: "coral" },
+  { id: "water_bubbles" as InterestType, emoji: "💦", label: "Agua y burbujas", color: "sky" },
+  { id: "discover" as InterestType, emoji: "🔬", label: "Descubrir cosas", color: "mint" },
+  { id: "sounds_rhythm" as InterestType, emoji: "🎵", label: "Sonidos y ritmo", color: "coral" },
+  { id: "building" as InterestType, emoji: "🧱", label: "Construir", color: "mint" },
+];
+
+const Interest = () => {
+  const navigate = useNavigate();
+  const [selectedInterest, setSelectedInterest] = useState<InterestType | null>(null);
+
+  const handleContinue = () => {
+    if (selectedInterest) {
+      localStorage.setItem("selectedInterest", selectedInterest);
+      navigate("/results");
+    }
+  };
+
+  const colorClasses = {
+    mint: "bg-mint/20 border-mint hover:bg-mint/30",
+    coral: "bg-coral/20 border-coral hover:bg-coral/30",
+    sky: "bg-sky/20 border-sky hover:bg-sky/30",
+  };
+
+  return (
+    <div className="min-h-screen p-6 pb-32 animate-fade-in">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <ProgressBar currentStep={4} totalSteps={5} />
+        
+        <div className="space-y-4 text-center animate-slide-up">
+          <h2 className="text-4xl md:text-5xl font-bold">
+            ¿Qué le emociona más a tu pequeño explorador hoy?
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Selecciona una actividad que le interese
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-grow">
+          {interests.map((interest) => (
+            <button
+              key={interest.id}
+              onClick={() => setSelectedInterest(interest.id)}
+              className={cn(
+                "p-8 rounded-3xl border-4 transition-all duration-300",
+                "hover:scale-105 active:scale-95 hover:shadow-lg",
+                "flex flex-col items-center gap-4",
+                selectedInterest === interest.id 
+                  ? `${colorClasses[interest.color as keyof typeof colorClasses]} shadow-lg scale-105` 
+                  : "bg-card/50 border-border/50"
+              )}
+            >
+              <span className="text-6xl animate-bounce-soft">{interest.emoji}</span>
+              <span className="text-xl font-bold">{interest.label}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
+          <div className="max-w-4xl mx-auto">
+            <Button
+              onClick={handleContinue}
+              disabled={!selectedInterest}
+              size="lg"
+              className="w-full text-xl py-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-all duration-300 hover:scale-105"
+            >
+              Ver actividades sugeridas ✨
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Interest;
