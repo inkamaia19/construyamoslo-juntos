@@ -4,7 +4,10 @@ ALTER TABLE public.onboarding_sessions
   ADD COLUMN IF NOT EXISTS child_name text,
   ADD COLUMN IF NOT EXISTS time_available text, -- short | medium | long
   ADD COLUMN IF NOT EXISTS parent_email text,
-  ADD COLUMN IF NOT EXISTS parent_context text;
+  ADD COLUMN IF NOT EXISTS parent_context text,
+  ADD COLUMN IF NOT EXISTS parent_first_name text,
+  ADD COLUMN IF NOT EXISTS parent_last_name text,
+  ADD COLUMN IF NOT EXISTS parent_phone text;
 
 -- Extend activities with richer content
 ALTER TABLE public.activities

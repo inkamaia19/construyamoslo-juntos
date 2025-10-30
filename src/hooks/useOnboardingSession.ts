@@ -118,6 +118,9 @@ export const useOnboardingSession = () => {
     time_available?: string;
     parent_email?: string;
     parent_context?: string;
+    parent_first_name?: string;
+    parent_last_name?: string;
+    parent_phone?: string;
   }) => {
     if (!sessionId || !sessionSecret) {
       await ensureSession();

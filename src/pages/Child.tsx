@@ -112,7 +112,7 @@ const Child = () => {
 
         <div className="p-6">
           <div className="max-w-sm sm:max-w-md mx-auto">
-            <Button disabled={!canContinue} size="lg" className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full justify-center text-center" onClick={() => navigate("/materials", { replace: true })}>
+            <Button disabled={!canContinue} size="lg" className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full justify-center text-center" onClick={() => navigate("/welcome", { replace: true })}>
               Continuar
             </Button>
           </div>

@@ -10,16 +10,20 @@ import { useNavigate } from "react-router-dom";
 const Parent = () => {
   const navigate = useNavigate();
   const { getSession, updateSession } = useOnboardingSession();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
-  const [context, setContext] = useState("");
   const [consent, setConsent] = useState(false);
   const [emailValid, setEmailValid] = useState(true);
 
   useEffect(() => {
     const load = async () => {
       const s = await getSession();
+      if (s?.parent_first_name) setFirstName(String(s.parent_first_name));
+      if (s?.parent_last_name) setLastName(String(s.parent_last_name));
+      if (s?.parent_phone) setPhone(String(s.parent_phone));
       if (s?.parent_email) setEmail(String(s.parent_email));
-      if (s?.parent_context) setContext(String(s.parent_context));
     };
     load();
   }, []);
@@ -29,10 +33,16 @@ const Parent = () => {
     setEmailValid(email.length === 0 || validateEmail(email));
   }, [email]);
 
-  const canContinue = validateEmail(email.trim()) && consent;
+  const phoneValid = phone.length === 0 || /[0-9+\-()\s]{7,}/.test(phone);
+  const canContinue = firstName.trim().length > 1 && lastName.trim().length > 1 && phoneValid && validateEmail(email.trim()) && consent;
 
   const handleContinue = async () => {
-    await updateSession({ parent_email: email.trim(), parent_context: context.trim() });
+    await updateSession({
+      parent_first_name: firstName.trim(),
+      parent_last_name: lastName.trim(),
+      parent_phone: phone.trim(),
+      parent_email: email.trim(),
+    });
     navigate("/child", { replace: true });
   };
 
@@ -46,6 +56,21 @@ const Parent = () => {
         </div>
 
         <div className="grid gap-4">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first">Nombre</Label>
+              <Input id="first" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="last">Apellido</Label>
+              <Input id="last" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Teléfono</Label>
+            <Input id="phone" placeholder="Ej: +51 900 000 000" value={phone} onChange={(e) => setPhone(e.target.value)} className={!phoneValid ? "border-destructive" : undefined} />
+            {!phoneValid && <p className="text-xs text-destructive">Ingresa un teléfono válido.</p>}
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email de contacto</Label>
             <Input
@@ -59,10 +84,6 @@ const Parent = () => {
             {!emailValid && (
               <p className="text-xs text-destructive">Ingresa un email válido.</p>
             )}
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="context">¿Qué te gustaría lograr?</Label>
-            <Textarea id="context" placeholder="Cuéntanos brevemente objetivos, horarios o expectativas" value={context} onChange={(e) => setContext(e.target.value)} />
           </div>
           <label className="flex items-start gap-3 text-sm">
             <input

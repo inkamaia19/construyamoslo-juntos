@@ -42,6 +42,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         parentEmail,
         parent_context,
         parentContext,
+        parent_first_name,
+        parentFirstName,
+        parent_last_name,
+        parentLastName,
+        parent_phone,
+        parentPhone,
       } = body;
 
       const fields: string[] = [];
@@ -87,6 +93,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (pCtx !== undefined) {
         fields.push(`parent_context = $${values.length + 1}`);
         values.push(pCtx);
+      }
+      const pFirst = parent_first_name ?? parentFirstName;
+      if (pFirst !== undefined) {
+        fields.push(`parent_first_name = $${values.length + 1}`);
+        values.push(pFirst);
+      }
+      const pLast = parent_last_name ?? parentLastName;
+      if (pLast !== undefined) {
+        fields.push(`parent_last_name = $${values.length + 1}`);
+        values.push(pLast);
+      }
+      const pPhone = parent_phone ?? parentPhone;
+      if (pPhone !== undefined) {
+        fields.push(`parent_phone = $${values.length + 1}`);
+        values.push(pPhone);
       }
 
       if (fields.length === 0) return res.status(204).end();
