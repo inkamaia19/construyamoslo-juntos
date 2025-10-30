@@ -41,6 +41,22 @@ export const useOnboardingSession = () => {
     }
   };
 
+  const newSession = async () => {
+    try {
+      localStorage.removeItem("onboarding_session_id");
+      localStorage.removeItem("onboarding_session_secret");
+      const resp = await fetch(`/api/session`, { method: "POST" });
+      if (!resp.ok) throw new Error("Failed to create session");
+      const data = await resp.json();
+      setSessionId(data.id);
+      setSessionSecret(data.session_secret);
+      localStorage.setItem("onboarding_session_id", data.id);
+      localStorage.setItem("onboarding_session_secret", data.session_secret);
+    } catch (error) {
+      console.error("Error creating new session:", error);
+    }
+  };
+
   const updateSession = async (updates: {
     materials?: Material[];
     environment?: Environment;
@@ -81,5 +97,6 @@ export const useOnboardingSession = () => {
     isLoading,
     updateSession,
     getSession,
+    newSession,
   };
 };

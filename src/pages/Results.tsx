@@ -118,6 +118,11 @@ const Results = () => {
   return (
     <div className="min-h-screen p-6 pb-32 animate-fade-in">
       <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => navigate("/interest")} className="rounded-full">
+            ← Atrás
+          </Button>
+        </div>
         <ProgressBar currentStep={5} totalSteps={5} />
         
         <div className="space-y-6 text-center animate-slide-up">
@@ -128,6 +133,15 @@ const Results = () => {
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Con los materiales que tienes y su estado actual, aquí tienes tres actividades Reggio seguras y divertidas para hoy.
           </p>
+          <div className="max-w-3xl mx-auto text-left bg-card/50 border rounded-2xl p-4">
+            <h3 className="font-semibold mb-2">Cómo elegimos estas actividades</h3>
+            <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+              <li>Usamos los materiales funcionales que seleccionaste.</li>
+              <li>Respetamos el interés que elegiste para potenciar la motivación.</li>
+              <li>Consideramos el espacio para favorecer la experiencia.</li>
+            </ul>
+            <p className="mt-3 text-sm">Recuerda: no hay una sola forma “correcta”. Observa, acompaña y celebren el proceso.</p>
+          </div>
         </div>
 
         <div className="grid gap-6 animate-grow">
@@ -169,6 +183,15 @@ const Results = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="max-w-3xl mx-auto mt-4 p-4 bg-muted/30 rounded-2xl border">
+          <h4 className="font-semibold mb-2">Recomendaciones de seguridad</h4>
+          <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+            <li>Supervisa siempre el uso de tijeras y piezas pequeñas.</li>
+            <li>Protege superficies si usan agua o pintura.</li>
+            <li>Adapta la propuesta según edad y ritmo.</li>
+          </ul>
         </div>
 
         <div className="flex justify-center pt-8">

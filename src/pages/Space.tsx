@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
 import ProgressBar from "@/components/ProgressBar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Environment } from "@/types/onboarding";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
@@ -42,6 +43,11 @@ const Space = () => {
   return (
     <div className="min-h-screen p-6 pb-32 animate-fade-in">
       <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => navigate("/evaluation")} className="rounded-full">
+            ← Atrás
+          </Button>
+        </div>
         <ProgressBar currentStep={3} totalSteps={5} />
         
         <div className="space-y-4 text-center animate-slide-up">
@@ -51,6 +57,18 @@ const Space = () => {
           <p className="text-lg text-muted-foreground">
             Selecciona el espacio principal para las actividades
           </p>
+          <div className="max-w-2xl mx-auto text-left">
+            <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
+              <AccordionItem value="why">
+                <AccordionTrigger>
+                  ¿Por qué importa el espacio?
+                </AccordionTrigger>
+                <AccordionContent>
+                  El lugar define el tipo de movimiento, ruido y materiales adecuados. Elegimos propuestas que respeten tu casa y el ritmo de tu familia.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-grow">
@@ -73,6 +91,10 @@ const Space = () => {
             </p>
           </div>
         )}
+
+        <p className="text-sm text-muted-foreground text-center">
+          Si cambian de lugar más tarde, no pasa nada: vuelvan a esta pantalla.
+        </p>
 
         <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
           <div className="max-w-4xl mx-auto">

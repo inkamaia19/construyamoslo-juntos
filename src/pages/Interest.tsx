@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ProgressBar from "@/components/ProgressBar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
@@ -48,6 +49,11 @@ const Interest = () => {
   return (
     <div className="min-h-screen p-6 pb-32 animate-fade-in">
       <div className="max-w-4xl mx-auto space-y-8">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => navigate("/space")} className="rounded-full">
+            ← Atrás
+          </Button>
+        </div>
         <ProgressBar currentStep={4} totalSteps={5} />
         
         <div className="space-y-4 text-center animate-slide-up">
@@ -57,6 +63,18 @@ const Interest = () => {
           <p className="text-lg text-muted-foreground">
             Selecciona una actividad que le interese
           </p>
+          <div className="max-w-2xl mx-auto text-left">
+            <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
+              <AccordionItem value="why">
+                <AccordionTrigger>
+                  ¿Qué buscamos con esta elección?
+                </AccordionTrigger>
+                <AccordionContent>
+                  Partimos del interés del niño para sostener la curiosidad y el disfrute. Esto potencia la autonomía y la creatividad, pilares del enfoque Reggio.
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-grow">

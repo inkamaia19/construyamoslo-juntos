@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ProgressBar from "@/components/ProgressBar";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Material, MaterialState } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
@@ -53,6 +54,11 @@ const Evaluation = () => {
   return (
     <div className="min-h-screen p-6 flex flex-col animate-fade-in">
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col">
+        <div className="flex items-center justify-between">
+          <Button variant="outline" onClick={() => navigate("/materials")} className="rounded-full">
+            ← Atrás
+          </Button>
+        </div>
         <ProgressBar currentStep={2} totalSteps={5} />
         
         <div className="flex-1 flex flex-col justify-center space-y-12">
@@ -69,6 +75,18 @@ const Evaluation = () => {
             <p className="text-sm text-muted-foreground">
               {currentIndex + 1} de {materials.length}
             </p>
+            <div className="max-w-xl mx-auto text-left">
+              <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
+                <AccordionItem value="why">
+                  <AccordionTrigger>
+                    ¿Para qué sirve evaluar el estado?
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    Nos permite proponer actividades seguras y alcanzables. En Reggio, la exploración es libre, pero siempre cuidamos el entorno y a las personas.
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
           </div>
 
           <div className="grid gap-4 animate-grow">
@@ -97,6 +115,10 @@ const Evaluation = () => {
               </p>
             </div>
           )}
+
+          <p className="text-xs text-muted-foreground text-center">
+            Tip: “Con ayuda” también cuenta. A veces lo mejor es explorar juntos.
+          </p>
         </div>
       </div>
     </div>

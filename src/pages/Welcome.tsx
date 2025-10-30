@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import welcomeImage from "@/assets/welcome-hero.jpg";
+import IntroCarousel from "@/components/IntroCarousel";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const Welcome = () => {
   const navigate = useNavigate();
+  const { newSession } = useOnboardingSession();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade-in">
@@ -17,16 +19,13 @@ const Welcome = () => {
           </p>
         </div>
 
-        <div className="rounded-3xl overflow-hidden shadow-xl animate-grow my-8">
-          <img 
-            src={welcomeImage} 
-            alt="Padre e hijo explorando materiales" 
-            className="w-full h-auto object-cover"
-          />
-        </div>
+        <IntroCarousel />
 
         <Button
-          onClick={() => navigate("/materials")}
+          onClick={async () => {
+            await newSession();
+            navigate("/materials");
+          }}
           size="lg"
           className="text-xl px-12 py-8 rounded-full bg-coral hover:bg-coral/90 text-foreground font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
         >
