@@ -63,7 +63,7 @@ const Interest = () => {
 
   return (
     <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
-      <FixedHeader currentStep={5} totalSteps={5} backTo="/space" title="Intereses" />
+      <FixedHeader currentStep={6} totalSteps={6} backTo="/space" title="Intereses" />
       <div className="max-w-4xl mx-auto space-y-8">
         
         <div className="space-y-4 text-center animate-slide-up">

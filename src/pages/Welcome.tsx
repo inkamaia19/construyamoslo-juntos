@@ -24,7 +24,7 @@ const Welcome = () => {
         <Button
           onClick={async () => {
             await ensureSession();
-            navigate("/child", { replace: true });
+            navigate("/intro", { replace: true });
           }}
           size="lg"
           className="text-xl px-12 py-8 rounded-full bg-coral hover:bg-coral/90 text-foreground font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"

@@ -116,6 +116,8 @@ export const useOnboardingSession = () => {
     child_age?: number;
     child_name?: string;
     time_available?: string;
+    parent_email?: string;
+    parent_context?: string;
   }) => {
     if (!sessionId || !sessionSecret) {
       await ensureSession();

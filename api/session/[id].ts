@@ -38,6 +38,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         childName,
         time_available,
         timeAvailable,
+        parent_email,
+        parentEmail,
+        parent_context,
+        parentContext,
       } = body;
 
       const fields: string[] = [];
@@ -72,6 +76,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (timeVal !== undefined) {
         fields.push(`time_available = $${values.length + 1}`);
         values.push(timeVal);
+      }
+
+      const pEmail = parent_email ?? parentEmail;
+      if (pEmail !== undefined) {
+        fields.push(`parent_email = $${values.length + 1}`);
+        values.push(pEmail);
+      }
+      const pCtx = parent_context ?? parentContext;
+      if (pCtx !== undefined) {
+        fields.push(`parent_context = $${values.length + 1}`);
+        values.push(pCtx);
       }
 
       if (fields.length === 0) return res.status(204).end();

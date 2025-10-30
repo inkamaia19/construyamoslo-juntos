@@ -13,6 +13,8 @@ import NotFound from "./pages/NotFound";
 import Activity from "./pages/Activity";
 import AppFooter from "@/components/AppFooter";
 import Child from "./pages/Child";
+import Intro from "./pages/Intro";
+import Parent from "./pages/Parent";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Welcome />} />
+          <Route path="/intro" element={<Intro />} />
+          <Route path="/parent" element={<Parent />} />
           <Route path="/child" element={<Child />} />
           <Route path="/materials" element={<Materials />} />
           <Route path="/evaluation" element={<Evaluation />} />

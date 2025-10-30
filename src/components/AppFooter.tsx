@@ -26,6 +26,8 @@ const AppFooter = () => {
   const key = getKey(pathname);
   const text = key ? messages[key] : "";
   if (!text) return null;
+  // Ocultar footer en la intro para evitar scroll o superposición
+  if (pathname.startsWith("/intro")) return null;
   return (
     <div id="app-footer" className="sticky bottom-0 left-0 right-0 z-20">
       <div className="max-w-4xl mx-auto px-4 pb-3">
