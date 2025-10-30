@@ -14,7 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      onboarding_sessions: {
+        Row: {
+          completed: boolean | null
+          created_at: string
+          environment: string | null
+          id: string
+          interest: string | null
+          materials: Json | null
+          updated_at: string
+        }
+        Insert: {
+          completed?: boolean | null
+          created_at?: string
+          environment?: string | null
+          id?: string
+          interest?: string | null
+          materials?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          completed?: boolean | null
+          created_at?: string
+          environment?: string | null
+          id?: string
+          interest?: string | null
+          materials?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

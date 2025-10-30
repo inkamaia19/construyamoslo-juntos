@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
 import ProgressBar from "@/components/ProgressBar";
 import { Material } from "@/types/onboarding";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const availableMaterials: Material[] = [
   { id: "cardboard", name: "Cartones", emoji: "📦" },
@@ -20,6 +21,21 @@ const availableMaterials: Material[] = [
 const Materials = () => {
   const navigate = useNavigate();
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
+  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+
+  useEffect(() => {
+    const loadSavedMaterials = async () => {
+      const session = await getSession();
+      if (session?.materials && Array.isArray(session.materials)) {
+        const savedIds = (session.materials as unknown as Material[]).map(m => m.id);
+        setSelectedMaterials(new Set(savedIds));
+      }
+    };
+
+    if (!isLoading && sessionId) {
+      loadSavedMaterials();
+    }
+  }, [isLoading, sessionId]);
 
   const toggleMaterial = (materialId: string) => {
     setSelectedMaterials(prev => {
@@ -33,13 +49,13 @@ const Materials = () => {
     });
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (selectedMaterials.size > 0) {
       const materials = availableMaterials
         .filter(m => selectedMaterials.has(m.id))
         .map(m => ({ ...m }));
       
-      localStorage.setItem("selectedMaterials", JSON.stringify(materials));
+      await updateSession({ materials });
       navigate("/evaluation");
     }
   };

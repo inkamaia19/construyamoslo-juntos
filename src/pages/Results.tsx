@@ -6,6 +6,7 @@ import activityWaterColors from "@/assets/activity-water-colors.jpg";
 import activitySounds from "@/assets/activity-sounds.jpg";
 import activityBuilding from "@/assets/activity-building.jpg";
 import { Material } from "@/types/onboarding";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 interface Activity {
   id: string;
@@ -43,25 +44,33 @@ const Results = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [materials, setMaterials] = useState<Material[]>([]);
+  const { sessionId, isLoading, getSession } = useOnboardingSession();
 
   useEffect(() => {
-    const storedMaterials = localStorage.getItem("evaluatedMaterials");
-    if (!storedMaterials) {
-      navigate("/");
-      return;
+    const loadResults = async () => {
+      const session = await getSession();
+      
+      if (!session?.materials || !Array.isArray(session.materials)) {
+        navigate("/");
+        return;
+      }
+      
+      const parsedMaterials: Material[] = session.materials as unknown as Material[];
+      setMaterials(parsedMaterials);
+      
+      // Filter activities based on available materials
+      const functionalMaterials = parsedMaterials
+        .filter(m => m.state === "functional" || m.state === "semi_functional")
+        .map(m => m.id);
+      
+      // For now, show all activities (in real app, filter by materials)
+      setActivities(allActivities.slice(0, 3));
+    };
+
+    if (!isLoading && sessionId) {
+      loadResults();
     }
-    
-    const parsedMaterials: Material[] = JSON.parse(storedMaterials);
-    setMaterials(parsedMaterials);
-    
-    // Filter activities based on available materials
-    const functionalMaterials = parsedMaterials
-      .filter(m => m.state === "functional" || m.state === "semi_functional")
-      .map(m => m.id);
-    
-    // For now, show all activities (in real app, filter by materials)
-    setActivities(allActivities.slice(0, 3));
-  }, [navigate]);
+  }, [isLoading, sessionId, navigate]);
 
   const handleStartActivity = (activityId: string) => {
     console.log("Starting activity:", activityId);

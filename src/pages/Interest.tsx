@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ProgressBar from "@/components/ProgressBar";
 import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const interests = [
   { id: "art_coloring" as InterestType, emoji: "🎨", label: "Colores y arte", color: "coral" },
@@ -16,10 +17,24 @@ const interests = [
 const Interest = () => {
   const navigate = useNavigate();
   const [selectedInterest, setSelectedInterest] = useState<InterestType | null>(null);
+  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
 
-  const handleContinue = () => {
+  useEffect(() => {
+    const loadSavedInterest = async () => {
+      const session = await getSession();
+      if (session?.interest) {
+        setSelectedInterest(session.interest as InterestType);
+      }
+    };
+
+    if (!isLoading && sessionId) {
+      loadSavedInterest();
+    }
+  }, [isLoading, sessionId]);
+
+  const handleContinue = async () => {
     if (selectedInterest) {
-      localStorage.setItem("selectedInterest", selectedInterest);
+      await updateSession({ interest: selectedInterest, completed: true });
       navigate("/results");
     }
   };

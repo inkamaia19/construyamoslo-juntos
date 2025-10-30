@@ -4,24 +4,32 @@ import { Button } from "@/components/ui/button";
 import ProgressBar from "@/components/ProgressBar";
 import { Material, MaterialState } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const Evaluation = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
 
   useEffect(() => {
-    const stored = localStorage.getItem("selectedMaterials");
-    if (stored) {
-      setMaterials(JSON.parse(stored));
-    } else {
-      navigate("/materials");
+    const loadMaterials = async () => {
+      const session = await getSession();
+      if (session?.materials && Array.isArray(session.materials)) {
+        setMaterials(session.materials as unknown as Material[]);
+      } else {
+        navigate("/materials");
+      }
+    };
+
+    if (!isLoading && sessionId) {
+      loadMaterials();
     }
-  }, [navigate]);
+  }, [isLoading, sessionId, navigate]);
 
   const currentMaterial = materials[currentIndex];
 
-  const handleStateSelect = (state: MaterialState) => {
+  const handleStateSelect = async (state: MaterialState) => {
     const updatedMaterials = [...materials];
     updatedMaterials[currentIndex] = { ...currentMaterial, state };
     setMaterials(updatedMaterials);
@@ -29,7 +37,7 @@ const Evaluation = () => {
     if (currentIndex < materials.length - 1) {
       setTimeout(() => setCurrentIndex(currentIndex + 1), 300);
     } else {
-      localStorage.setItem("evaluatedMaterials", JSON.stringify(updatedMaterials));
+      await updateSession({ materials: updatedMaterials });
       setTimeout(() => navigate("/space"), 400);
     }
   };

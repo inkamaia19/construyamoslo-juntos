@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
 import ProgressBar from "@/components/ProgressBar";
 import { Environment } from "@/types/onboarding";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const spaces = [
   { id: "garden" as Environment, emoji: "🌳", label: "Jardín" },
@@ -16,10 +17,24 @@ const spaces = [
 const Space = () => {
   const navigate = useNavigate();
   const [selectedSpace, setSelectedSpace] = useState<Environment | null>(null);
+  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
 
-  const handleContinue = () => {
+  useEffect(() => {
+    const loadSavedSpace = async () => {
+      const session = await getSession();
+      if (session?.environment) {
+        setSelectedSpace(session.environment as Environment);
+      }
+    };
+
+    if (!isLoading && sessionId) {
+      loadSavedSpace();
+    }
+  }, [isLoading, sessionId]);
+
+  const handleContinue = async () => {
     if (selectedSpace) {
-      localStorage.setItem("selectedSpace", selectedSpace);
+      await updateSession({ environment: selectedSpace });
       navigate("/interest");
     }
   };
