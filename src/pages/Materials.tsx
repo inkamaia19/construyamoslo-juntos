@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
 import FixedHeader from "@/components/FixedHeader";
@@ -24,6 +25,7 @@ const Materials = () => {
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
   const location = useLocation();
   const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const ctaRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const loadSavedMaterials = async () => {
@@ -59,8 +61,9 @@ const Materials = () => {
     });
   };
 
+  const MIN_SELECTED = 2;
   const handleContinue = async () => {
-    if (selectedMaterials.size > 0) {
+    if (selectedMaterials.size >= MIN_SELECTED) {
       const materials = availableMaterials
         .filter(m => selectedMaterials.has(m.id))
         .map(m => ({ ...m }));
@@ -70,10 +73,24 @@ const Materials = () => {
     }
   };
 
+  useEffect(() => {
+    if (selectedMaterials.size >= MIN_SELECTED) {
+      const footer = document.getElementById("app-footer");
+      const footerH = footer ? footer.getBoundingClientRect().height : 80;
+      const btn = ctaRef.current;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        const absoluteTop = window.scrollY + rect.top;
+        const target = absoluteTop - footerH - 24; // 24px offset
+        window.scrollTo({ top: target, behavior: "smooth" });
+      }
+    }
+  }, [selectedMaterials.size]);
+
   const colors: Array<"mint" | "coral" | "sky" | "cream"> = ["mint", "coral", "sky", "cream"];
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+    <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
       <FixedHeader currentStep={2} totalSteps={5} backTo="/child" title="Materiales" />
       <div className="max-w-4xl mx-auto space-y-8">
         
@@ -116,9 +133,10 @@ const Materials = () => {
           <div className="max-w-sm sm:max-w-md mx-auto">
             <Button
               onClick={handleContinue}
-              disabled={selectedMaterials.size === 0}
+              disabled={selectedMaterials.size < MIN_SELECTED}
               size="lg"
               className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-colors justify-center text-center"
+              ref={ctaRef}
             >
               {isLoading ? "Cargando…" : `Listo, continuar (${selectedMaterials.size} seleccionados)`}
             </Button>

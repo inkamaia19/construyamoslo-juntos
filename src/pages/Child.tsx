@@ -50,7 +50,7 @@ const Child = () => {
   const canContinue = age !== null && time !== "";
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+    <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
       <FixedHeader currentStep={1} totalSteps={5} backTo="/" title="Datos del niño" />
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="space-y-4 text-center">

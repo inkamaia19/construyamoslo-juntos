@@ -27,7 +27,7 @@ const AppFooter = () => {
   const text = key ? messages[key] : "";
   if (!text) return null;
   return (
-    <div className="sticky bottom-0 left-0 right-0 z-20">
+    <div id="app-footer" className="sticky bottom-0 left-0 right-0 z-20">
       <div className="max-w-4xl mx-auto px-4 pb-3">
         <div className="rounded-2xl border bg-card/60 backdrop-blur px-4 py-3 text-xs text-muted-foreground">
           <span className="font-semibold">¿Por qué te preguntamos esto?</span> {text}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FixedHeader from "@/components/FixedHeader";
@@ -19,6 +19,7 @@ const Interest = () => {
   const navigate = useNavigate();
   const [selectedInterest, setSelectedInterest] = useState<InterestType | null>(null);
   const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const ctaRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const loadSavedInterest = async () => {
@@ -40,6 +41,20 @@ const Interest = () => {
     }
   };
 
+  useEffect(() => {
+    if (selectedInterest) {
+      const footer = document.getElementById("app-footer");
+      const footerH = footer ? footer.getBoundingClientRect().height : 80;
+      const btn = ctaRef.current;
+      if (btn) {
+        const rect = btn.getBoundingClientRect();
+        const absoluteTop = window.scrollY + rect.top;
+        const target = absoluteTop - footerH - 24;
+        window.scrollTo({ top: target, behavior: "smooth" });
+      }
+    }
+  }, [selectedInterest]);
+
   const colorClasses = {
     mint: "bg-mint/20 border-mint hover:bg-mint/30",
     coral: "bg-coral/20 border-coral hover:bg-coral/30",
@@ -47,7 +62,7 @@ const Interest = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+    <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
       <FixedHeader currentStep={5} totalSteps={5} backTo="/space" title="Intereses" />
       <div className="max-w-4xl mx-auto space-y-8">
         
@@ -94,6 +109,7 @@ const Interest = () => {
               disabled={!selectedInterest}
               size="lg"
               className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-colors justify-center text-center"
+              ref={ctaRef}
             >
               Ver actividades sugeridas ✨
             </Button>
