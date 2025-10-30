@@ -23,6 +23,10 @@ export const useOnboardingSession = () => {
           if (resp.ok) {
             setSessionId(storedSessionId);
             setSessionSecret(storedSecret);
+          } else if (resp.status === 404) {
+            // Clear stale session references so we can create a new one later
+            localStorage.removeItem("onboarding_session_id");
+            localStorage.removeItem("onboarding_session_secret");
           }
         }
       } catch (e) {
@@ -112,15 +116,31 @@ export const useOnboardingSession = () => {
     child_name?: string;
     time_available?: string;
   }) => {
-    if (!sessionId) return;
+    if (!sessionId || !sessionSecret) {
+      await ensureSession();
+    }
 
     try {
-      const resp = await fetch(`/api/session/${sessionId}`, {
+      const currentId = sessionId || localStorage.getItem("onboarding_session_id");
+      const currentSecret = sessionSecret || localStorage.getItem("onboarding_session_secret") || "";
+      const resp = await fetch(`/api/session/${currentId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-session-secret": sessionSecret || "" },
+        headers: { "Content-Type": "application/json", "x-session-secret": currentSecret },
         body: JSON.stringify(updates),
       });
-      if (!resp.ok) throw new Error("Failed to update session");
+      if (resp.status === 404) {
+        // Session invalidated or expired on server, recreate and retry once
+        await initializeSession();
+        const retryId = localStorage.getItem("onboarding_session_id");
+        const retrySecret = localStorage.getItem("onboarding_session_secret") || "";
+        await fetch(`/api/session/${retryId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", "x-session-secret": retrySecret },
+          body: JSON.stringify(updates),
+        });
+      } else if (!resp.ok && resp.status !== 204) {
+        throw new Error("Failed to update session");
+      }
       touchSession();
     } catch (error) {
       console.error("Error updating session:", error);

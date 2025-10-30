@@ -61,13 +61,24 @@ const Child = () => {
         <div className="grid gap-6 md:grid-cols-2">
           <div className="space-y-3">
             <h3 className="font-semibold">Edad</h3>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {quickAges.map((a) => (
-                <Button key={a} variant={age === a ? "default" : "outline"} className="rounded-full" onClick={() => chooseAge(a)}>
+                <Button
+                  key={a}
+                  size="lg"
+                  variant={age === a ? "default" : "outline"}
+                  className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
+                  onClick={() => chooseAge(a)}
+                >
                   +{a}
                 </Button>
               ))}
-              <Button variant={showCustomAge ? "default" : "outline"} className="rounded-full" onClick={() => setShowCustomAge((v) => !v)}>
+              <Button
+                size="lg"
+                variant={showCustomAge ? "default" : "outline"}
+                className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
+                onClick={() => setShowCustomAge((v) => !v)}
+              >
                 Más…
               </Button>
             </div>
@@ -83,9 +94,15 @@ const Child = () => {
 
           <div className="space-y-3">
             <h3 className="font-semibold">Tiempo disponible</h3>
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex gap-3 flex-wrap">
               {timeOptions.map((t) => (
-                <Button key={t.id} variant={time === t.id ? "default" : "outline"} className="rounded-full" onClick={() => chooseTime(t.id)}>
+                <Button
+                  key={t.id}
+                  size="lg"
+                  variant={time === t.id ? "default" : "outline"}
+                  className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
+                  onClick={() => chooseTime(t.id)}
+                >
                   {t.label}
                 </Button>
               ))}

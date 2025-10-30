@@ -64,7 +64,19 @@ app.patch("/api/session/:id", async (req, res) => {
     const { id } = req.params;
     const secret = (req.headers["x-session-secret"] as string) || (req.query.secret as string);
     if (!secret) return res.status(401).json({ error: "Missing session secret" });
-    const { materials, environment, interest, completed, child_age, child_name, time_available } = req.body || {};
+  const {
+    materials,
+    environment,
+    interest,
+    completed,
+    child_age,
+    child_name,
+    time_available,
+    // also accept camelCase from clients
+    childAge,
+    childName,
+    timeAvailable,
+  } = req.body || {};
 
     const fields: string[] = [];
     const values: any[] = [];
@@ -85,20 +97,23 @@ app.patch("/api/session/:id", async (req, res) => {
       fields.push("completed = $" + (values.length + 1));
       values.push(Boolean(completed));
     }
-    if (child_age !== undefined) {
+    const ageVal = child_age ?? childAge;
+    if (ageVal !== undefined) {
       fields.push("child_age = $" + (values.length + 1));
-      values.push(child_age === null ? null : Number(child_age));
+      values.push(ageVal === null ? null : Number(ageVal));
     }
-    if (child_name !== undefined) {
+    const nameVal = child_name ?? childName;
+    if (nameVal !== undefined) {
       fields.push("child_name = $" + (values.length + 1));
-      values.push(child_name);
+      values.push(nameVal);
     }
-    if (time_available !== undefined) {
+    const timeVal = time_available ?? timeAvailable;
+    if (timeVal !== undefined) {
       fields.push("time_available = $" + (values.length + 1));
-      values.push(time_available);
+      values.push(timeVal);
     }
 
-    if (fields.length === 0) return res.status(400).json({ error: "No updates provided" });
+    if (fields.length === 0) return res.status(204).json({});
 
     // updated_at trigger will handle timestamp
     const query = `UPDATE public.onboarding_sessions SET ${fields.join(", ")} WHERE id = $${
