@@ -50,6 +50,11 @@ const Intro = () => {
                             src={s.logo}
                             alt="Minds in Action logo"
                             className="h-full w-full object-contain p-5"
+                            width="208"
+                            height="208"
+                            loading="eager"
+                            fetchpriority="high"
+                            decoding="async"
                             onError={(e) => {
                               (e.currentTarget as HTMLImageElement).style.display = "none";
                             }}
