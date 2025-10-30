@@ -12,15 +12,17 @@ const Evaluation = () => {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const [uiLoading, setUiLoading] = useState(true);
 
   useEffect(() => {
     const loadMaterials = async () => {
       const session = await getSession();
       if (session?.materials && Array.isArray(session.materials)) {
         setMaterials(session.materials as unknown as Material[]);
-      } else {
+      } else if (!isLoading) {
         navigate("/materials");
       }
+      setUiLoading(false);
     };
 
     if (!isLoading && sessionId) {
@@ -49,7 +51,7 @@ const Evaluation = () => {
     { state: "not_functional" as MaterialState, emoji: "🔴", label: "No sirve" },
   ];
 
-  if (!currentMaterial) {
+  if (uiLoading || isLoading || !sessionId) {
     return (
       <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
         <FixedHeader currentStep={3} totalSteps={5} backTo="/materials" title="Evaluación" />
@@ -69,6 +71,11 @@ const Evaluation = () => {
         </div>
       </div>
     );
+  }
+  // If finished loading and no materials, guard route
+  if (!currentMaterial) {
+    navigate("/materials");
+    return null;
   }
 
   return (
