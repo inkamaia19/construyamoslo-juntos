@@ -5,7 +5,7 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 const Welcome = () => {
   const navigate = useNavigate();
-  const { newSession } = useOnboardingSession();
+  const { ensureSession } = useOnboardingSession();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 animate-fade-in">
@@ -23,8 +23,8 @@ const Welcome = () => {
 
         <Button
           onClick={async () => {
-            await newSession();
-            navigate("/materials");
+            await ensureSession();
+            navigate("/materials", { replace: true, state: { reset: true } });
           }}
           size="lg"
           className="text-xl px-12 py-8 rounded-full bg-coral hover:bg-coral/90 text-foreground font-bold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"

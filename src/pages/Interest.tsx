@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ProgressBar from "@/components/ProgressBar";
+import FixedHeader from "@/components/FixedHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ const Interest = () => {
   const handleContinue = async () => {
     if (selectedInterest) {
       await updateSession({ interest: selectedInterest, completed: true });
-      navigate("/results");
+      navigate("/results", { replace: true });
     }
   };
 
@@ -47,14 +47,9 @@ const Interest = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 pb-32 animate-fade-in">
+    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
+      <FixedHeader currentStep={4} totalSteps={5} backTo="/space" title="Intereses" />
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate("/space")} className="rounded-full">
-            ← Atrás
-          </Button>
-        </div>
-        <ProgressBar currentStep={4} totalSteps={5} />
         
         <div className="space-y-4 text-center animate-slide-up">
           <h2 className="text-4xl md:text-5xl font-bold">

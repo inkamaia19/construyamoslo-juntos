@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
-import ProgressBar from "@/components/ProgressBar";
+import FixedHeader from "@/components/FixedHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Environment } from "@/types/onboarding";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
@@ -36,19 +36,14 @@ const Space = () => {
   const handleContinue = async () => {
     if (selectedSpace) {
       await updateSession({ environment: selectedSpace });
-      navigate("/interest");
+      navigate("/interest", { replace: true });
     }
   };
 
   return (
-    <div className="min-h-screen p-6 pb-32 animate-fade-in">
+    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
+      <FixedHeader currentStep={3} totalSteps={5} backTo="/evaluation" title="Espacio" />
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate("/evaluation")} className="rounded-full">
-            ← Atrás
-          </Button>
-        </div>
-        <ProgressBar currentStep={3} totalSteps={5} />
         
         <div className="space-y-4 text-center animate-slide-up">
           <h2 className="text-4xl md:text-5xl font-bold">

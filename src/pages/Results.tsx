@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ProgressBar from "@/components/ProgressBar";
+import FixedHeader from "@/components/FixedHeader";
 import activityWaterColors from "@/assets/activity-water-colors.jpg";
 import activitySounds from "@/assets/activity-sounds.jpg";
 import activityBuilding from "@/assets/activity-building.jpg";
@@ -116,14 +116,9 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 pb-32 animate-fade-in">
+    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
+      <FixedHeader currentStep={5} totalSteps={5} backTo="/interest" title="Resultados" />
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate("/interest")} className="rounded-full">
-            ← Atrás
-          </Button>
-        </div>
-        <ProgressBar currentStep={5} totalSteps={5} />
         
         <div className="space-y-6 text-center animate-slide-up">
           <div className="text-6xl animate-grow">🌱</div>

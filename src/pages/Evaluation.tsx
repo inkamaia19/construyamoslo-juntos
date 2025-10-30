@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ProgressBar from "@/components/ProgressBar";
+import FixedHeader from "@/components/FixedHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Material, MaterialState } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
@@ -39,7 +39,7 @@ const Evaluation = () => {
       setTimeout(() => setCurrentIndex(currentIndex + 1), 300);
     } else {
       await updateSession({ materials: updatedMaterials });
-      setTimeout(() => navigate("/space"), 400);
+      setTimeout(() => navigate("/space", { replace: true }), 400);
     }
   };
 
@@ -52,14 +52,9 @@ const Evaluation = () => {
   if (!currentMaterial) return null;
 
   return (
-    <div className="min-h-screen p-6 flex flex-col animate-fade-in">
+    <div className="min-h-screen p-6 pt-28 flex flex-col animate-fade-in">
+      <FixedHeader currentStep={2} totalSteps={5} backTo="/materials" title="Evaluación" />
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col">
-        <div className="flex items-center justify-between">
-          <Button variant="outline" onClick={() => navigate("/materials")} className="rounded-full">
-            ← Atrás
-          </Button>
-        </div>
-        <ProgressBar currentStep={2} totalSteps={5} />
         
         <div className="flex-1 flex flex-col justify-center space-y-12">
           <div className="text-center space-y-6 animate-slide-up">
