@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import MaterialIcon from "@/components/MaterialIcon";
 import FixedHeader from "@/components/FixedHeader";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Material } from "@/types/onboarding";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
@@ -73,57 +73,54 @@ const Materials = () => {
   const colors: Array<"mint" | "coral" | "sky" | "cream"> = ["mint", "coral", "sky", "cream"];
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
-      <FixedHeader currentStep={1} totalSteps={5} backTo="/" title="Materiales" />
+    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+      <FixedHeader currentStep={2} totalSteps={5} backTo="/child" title="Materiales" />
       <div className="max-w-4xl mx-auto space-y-8">
         
         <div className="space-y-4 text-center animate-slide-up">
           <h2 className="text-4xl md:text-5xl font-bold">
             ¿Qué tienes hoy en casa?
           </h2>
-          <p className="text-lg text-muted-foreground">
-            Selecciona todos los materiales que tengas disponibles
-          </p>
-          <div className="max-w-2xl mx-auto text-left">
-            <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
-              <AccordionItem value="why">
-                <AccordionTrigger>
-                  ¿Por qué te preguntamos esto?
-                </AccordionTrigger>
-                <AccordionContent>
-                  Saber qué hay disponible nos ayuda a sugerir actividades Reggio que respetan tu contexto y aprovechan lo cotidiano. Nada que comprar, todo para explorar.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
+          <p className="text-lg text-muted-foreground">Selecciona todos los materiales que tengas disponibles</p>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-grow">
-          {availableMaterials.map((material, index) => (
-            <MaterialIcon
-              key={material.id}
-              emoji={material.emoji}
-              label={material.name}
-              isSelected={selectedMaterials.has(material.id)}
-              onClick={() => toggleMaterial(material.id)}
-              color={colors[index % colors.length]}
-            />
-          ))}
-        </div>
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="p-6 rounded-3xl border-4 bg-card/50 border-border/30">
+                <Skeleton className="h-12 w-12 mx-auto rounded-full mb-3" />
+                <Skeleton className="h-4 w-24 mx-auto rounded" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 animate-grow">
+            {availableMaterials.map((material, index) => (
+              <MaterialIcon
+                key={material.id}
+                emoji={material.emoji}
+                label={material.name}
+                isSelected={selectedMaterials.has(material.id)}
+                onClick={() => toggleMaterial(material.id)}
+                color={colors[index % colors.length]}
+              />
+            ))}
+          </div>
+        )}
 
         <p className="text-sm text-muted-foreground text-center animate-fade-in">
           Consejo: basta con 2–3 materiales para empezar. Siempre puedes sumar más luego.
         </p>
 
-        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
-          <div className="max-w-4xl mx-auto">
+        <div className="p-6">
+          <div className="max-w-sm sm:max-w-md mx-auto">
             <Button
               onClick={handleContinue}
               disabled={selectedMaterials.size === 0}
               size="lg"
-              className="w-full text-xl py-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-all duration-300 hover:scale-105"
+              className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-colors justify-center text-center"
             >
-              Listo, continuar ({selectedMaterials.size} seleccionados)
+              {isLoading ? "Cargando…" : `Listo, continuar (${selectedMaterials.size} seleccionados)`}
             </Button>
           </div>
         </div>

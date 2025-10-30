@@ -2,10 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FixedHeader from "@/components/FixedHeader";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Material, MaterialState } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Evaluation = () => {
   const navigate = useNavigate();
@@ -49,11 +49,31 @@ const Evaluation = () => {
     { state: "not_functional" as MaterialState, emoji: "🔴", label: "No sirve" },
   ];
 
-  if (!currentMaterial) return null;
+  if (!currentMaterial) {
+    return (
+      <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+        <FixedHeader currentStep={3} totalSteps={5} backTo="/materials" title="Evaluación" />
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="text-center space-y-6">
+            <Skeleton className="h-20 w-20 rounded-full mx-auto" />
+            <Skeleton className="h-6 w-64 mx-auto" />
+            <Skeleton className="h-4 w-40 mx-auto" />
+          </div>
+          <div className="grid gap-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="p-8 rounded-3xl border-4 bg-card/50 border-border/30">
+                <Skeleton className="h-6 w-48" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen p-6 pt-28 flex flex-col animate-fade-in">
-      <FixedHeader currentStep={2} totalSteps={5} backTo="/materials" title="Evaluación" />
+    <div className="min-h-screen p-6 pt-28 pb-40 flex flex-col animate-fade-in">
+      <FixedHeader currentStep={3} totalSteps={5} backTo="/materials" title="Evaluación" />
       <div className="max-w-2xl mx-auto w-full space-y-8 flex-1 flex flex-col">
         
         <div className="flex-1 flex flex-col justify-center space-y-12">
@@ -70,18 +90,7 @@ const Evaluation = () => {
             <p className="text-sm text-muted-foreground">
               {currentIndex + 1} de {materials.length}
             </p>
-            <div className="max-w-xl mx-auto text-left">
-              <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
-                <AccordionItem value="why">
-                  <AccordionTrigger>
-                    ¿Para qué sirve evaluar el estado?
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    Nos permite proponer actividades seguras y alcanzables. En Reggio, la exploración es libre, pero siempre cuidamos el entorno y a las personas.
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </div>
+            
           </div>
 
           <div className="grid gap-4 animate-grow">

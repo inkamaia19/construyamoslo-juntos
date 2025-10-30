@@ -10,6 +10,9 @@ import Space from "./pages/Space";
 import Interest from "./pages/Interest";
 import Results from "./pages/Results";
 import NotFound from "./pages/NotFound";
+import Activity from "./pages/Activity";
+import AppFooter from "@/components/AppFooter";
+import Child from "./pages/Child";
 
 const queryClient = new QueryClient();
 
@@ -21,14 +24,17 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Welcome />} />
+          <Route path="/child" element={<Child />} />
           <Route path="/materials" element={<Materials />} />
           <Route path="/evaluation" element={<Evaluation />} />
           <Route path="/space" element={<Space />} />
           <Route path="/interest" element={<Interest />} />
           <Route path="/results" element={<Results />} />
+          <Route path="/activity/:id" element={<Activity />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AppFooter />
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

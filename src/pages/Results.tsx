@@ -11,93 +11,42 @@ import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 interface Activity {
   id: string;
   title: string;
-  image: string;
-  materials: string[];
+  required_materials?: string[];
   difficulty: "fácil" | "medio" | "avanzado";
 }
-
-const allActivities: Activity[] = [
-  {
-    id: "water-colors",
-    title: "Explora colores con agua",
-    image: activityWaterColors,
-    materials: ["botellas", "agua", "pinturas"],
-    difficulty: "fácil"
-  },
-  {
-    id: "bottle-sounds",
-    title: "Crea sonidos con botellas",
-    image: activitySounds,
-    materials: ["botellas", "palitos", "materiales varios"],
-    difficulty: "fácil"
-  },
-  {
-    id: "cardboard-construction",
-    title: "Construye con cartón",
-    image: activityBuilding,
-    materials: ["cartones", "tijeras", "pinturas"],
-    difficulty: "medio"
-  }
-];
 
 const Results = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
   const [materials, setMaterials] = useState<Material[]>([]);
-  const { sessionId, isLoading, getSession } = useOnboardingSession();
+  const { sessionId, sessionSecret, isLoading, getSession } = useOnboardingSession();
 
   useEffect(() => {
     const loadResults = async () => {
       const session = await getSession();
-      
       if (!session?.materials || !Array.isArray(session.materials)) {
         navigate("/");
         return;
       }
-      
       const parsedMaterials: Material[] = session.materials as unknown as Material[];
       setMaterials(parsedMaterials);
-      
-      // Filter activities based on available materials and interest/environment
-      const functionalMaterials = new Set(
-        parsedMaterials
-          .filter(m => m.state === "functional" || m.state === "semi_functional")
-          .map(m => m.id)
-      );
 
-      const interest = (session?.interest as string | undefined) || undefined;
-      const environment = (session?.environment as string | undefined) || undefined;
-
-      const filtered = allActivities.filter(a => {
-        // Require at least one matching material
-        const materialMatch = a.materials.some(m => {
-          const map: Record<string, string> = {
-            botellas: "bottles",
-            cartones: "cardboard",
-            tijeras: "scissors",
-            pinturas: "paint",
-            palitos: "sticks",
-          };
-          const id = map[m] || m;
-          return functionalMaterials.has(id);
-        });
-
-        // Light weighting by interest
-        const interestBias = interest
-          ? (interest === "water_bubbles" && a.id.includes("water")) ||
-            (interest === "sounds_rhythm" && a.id.includes("sound")) ||
-            (interest === "building" && a.id.includes("cardboard")) ||
-            (interest === "art_coloring" && a.id.includes("color")) ||
-            (interest === "discover")
-          : true;
-
-        // Environment hint (soft)
-        const envBias = environment ? true : true;
-
-        return materialMatch && interestBias && envBias;
+      if (!sessionId || !sessionSecret) { setLoading(false); return; }
+      const resp = await fetch(`/api/recommendations/${sessionId}`, {
+        headers: { "x-session-secret": sessionSecret },
       });
-
-      setActivities((filtered.length ? filtered : allActivities).slice(0, 3));
+      if (resp.ok) {
+        const data = await resp.json();
+        const items: Activity[] = (data?.items || []).map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          difficulty: a.difficulty,
+          required_materials: a.required_materials,
+        }));
+        setActivities(items);
+      }
+      setLoading(false);
     };
 
     if (!isLoading && sessionId) {
@@ -106,8 +55,7 @@ const Results = () => {
   }, [isLoading, sessionId, navigate]);
 
   const handleStartActivity = (activityId: string) => {
-    console.log("Starting activity:", activityId);
-    // In a real app, navigate to activity details
+    navigate(`/activity/${activityId}`);
   };
 
   const handleRestart = () => {
@@ -116,7 +64,7 @@ const Results = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
+    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
       <FixedHeader currentStep={5} totalSteps={5} backTo="/interest" title="Resultados" />
       <div className="max-w-4xl mx-auto space-y-8">
         
@@ -140,15 +88,33 @@ const Results = () => {
         </div>
 
         <div className="grid gap-6 animate-grow">
-          {activities.map((activity, index) => (
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="bg-card rounded-3xl overflow-hidden shadow-lg border-2 border-border/50">
+                  <div className="aspect-video">
+                    <div className="h-full w-full">
+                      <div className="h-full w-full bg-muted animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="p-6 space-y-3">
+                    <div className="h-6 w-48 bg-muted rounded animate-pulse" />
+                    <div className="flex gap-2">
+                      <div className="h-5 w-24 bg-muted rounded animate-pulse" />
+                      <div className="h-5 w-16 bg-muted rounded animate-pulse" />
+                    </div>
+                    <div className="h-10 w-full bg-muted rounded-full animate-pulse" />
+                  </div>
+                </div>
+              ))
+            : activities.map((activity, index) => (
             <div 
               key={activity.id}
               className="bg-card rounded-3xl overflow-hidden shadow-lg border-2 border-border/50 hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="aspect-video overflow-hidden">
-                <img 
-                  src={activity.image} 
+                <img
+                  src={activity.id === "water-colors" ? activityWaterColors : activity.id === "bottle-sounds" ? activitySounds : activityBuilding}
                   alt={activity.title}
                   className="w-full h-full object-cover"
                 />
@@ -156,7 +122,7 @@ const Results = () => {
               <div className="p-6 space-y-4">
                 <h3 className="text-2xl font-bold">{activity.title}</h3>
                 <div className="flex flex-wrap gap-2">
-                  {activity.materials.map(material => (
+                  {(activity.required_materials || []).map(material => (
                     <span 
                       key={material}
                       className="px-3 py-1 bg-mint/20 text-foreground rounded-full text-sm font-medium"

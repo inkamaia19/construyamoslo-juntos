@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import FixedHeader from "@/components/FixedHeader";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
@@ -47,8 +47,8 @@ const Interest = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 pt-28 pb-32 animate-fade-in">
-      <FixedHeader currentStep={4} totalSteps={5} backTo="/space" title="Intereses" />
+    <div className="min-h-screen p-6 pt-28 pb-40 animate-fade-in">
+      <FixedHeader currentStep={5} totalSteps={5} backTo="/space" title="Intereses" />
       <div className="max-w-4xl mx-auto space-y-8">
         
         <div className="space-y-4 text-center animate-slide-up">
@@ -58,47 +58,42 @@ const Interest = () => {
           <p className="text-lg text-muted-foreground">
             Selecciona una actividad que le interese
           </p>
-          <div className="max-w-2xl mx-auto text-left">
-            <Accordion type="single" collapsible className="bg-card/50 rounded-2xl border p-3">
-              <AccordionItem value="why">
-                <AccordionTrigger>
-                  ¿Qué buscamos con esta elección?
-                </AccordionTrigger>
-                <AccordionContent>
-                  Partimos del interés del niño para sostener la curiosidad y el disfrute. Esto potencia la autonomía y la creatividad, pilares del enfoque Reggio.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-grow">
-          {interests.map((interest) => (
-            <button
-              key={interest.id}
-              onClick={() => setSelectedInterest(interest.id)}
-              className={cn(
-                "p-8 rounded-3xl border-4 transition-all duration-300",
-                "hover:scale-105 active:scale-95 hover:shadow-lg",
-                "flex flex-col items-center gap-4",
-                selectedInterest === interest.id 
-                  ? `${colorClasses[interest.color as keyof typeof colorClasses]} shadow-lg scale-105` 
-                  : "bg-card/50 border-border/50"
-              )}
-            >
-              <span className="text-6xl animate-bounce-soft">{interest.emoji}</span>
-              <span className="text-xl font-bold">{interest.label}</span>
-            </button>
-          ))}
+          {isLoading
+            ? Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="p-8 rounded-3xl border-4 bg-card/50 border-border/30">
+                  <Skeleton className="h-12 w-12 mx-auto rounded-full mb-4" />
+                  <Skeleton className="h-5 w-40 mx-auto" />
+                </div>
+              ))
+            : interests.map((interest) => (
+                <button
+                  key={interest.id}
+                  onClick={() => setSelectedInterest(interest.id)}
+                  className={cn(
+                    "p-8 rounded-3xl border-4 transition-all duration-300",
+                    "hover:scale-105 active:scale-95 hover:shadow-lg",
+                    "flex flex-col items-center gap-4",
+                    selectedInterest === interest.id
+                      ? `${colorClasses[interest.color as keyof typeof colorClasses]} shadow-lg scale-105`
+                      : "bg-card/50 border-border/50"
+                  )}
+                >
+                  <span className="text-6xl animate-bounce-soft">{interest.emoji}</span>
+                  <span className="text-xl font-bold">{interest.label}</span>
+                </button>
+              ))}
         </div>
 
-        <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-background via-background to-transparent">
-          <div className="max-w-4xl mx-auto">
+        <div className="p-6">
+          <div className="max-w-sm sm:max-w-md mx-auto">
             <Button
               onClick={handleContinue}
               disabled={!selectedInterest}
               size="lg"
-              className="w-full text-xl py-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-all duration-300 hover:scale-105"
+              className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full bg-secondary hover:bg-secondary/90 text-foreground font-bold shadow-lg disabled:opacity-50 transition-colors justify-center text-center"
             >
               Ver actividades sugeridas ✨
             </Button>

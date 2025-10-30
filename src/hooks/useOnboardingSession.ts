@@ -108,6 +108,9 @@ export const useOnboardingSession = () => {
     environment?: Environment;
     interest?: Interest;
     completed?: boolean;
+    child_age?: number;
+    child_name?: string;
+    time_available?: string;
   }) => {
     if (!sessionId) return;
 
@@ -144,6 +147,7 @@ export const useOnboardingSession = () => {
   return {
     sessionId,
     isLoading,
+    sessionSecret,
     updateSession,
     getSession,
     newSession,
