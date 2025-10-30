@@ -6,6 +6,7 @@ import activityWaterColors from "@/assets/activity-water-colors.jpg";
 import activitySounds from "@/assets/activity-sounds.jpg";
 import activityBuilding from "@/assets/activity-building.jpg";
 import { Material } from "@/types/onboarding";
+import { apiFetch } from "@/lib/api";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 
 interface Activity {
@@ -33,7 +34,7 @@ const Results = () => {
       setMaterials(parsedMaterials);
 
       if (!sessionId || !sessionSecret) { setLoading(false); return; }
-      const resp = await fetch(`/api/recommendations/${sessionId}`, {
+      const resp = await apiFetch(`/api/recommendations/${sessionId}`, {
         headers: { "x-session-secret": sessionSecret },
       });
       if (resp.ok) {

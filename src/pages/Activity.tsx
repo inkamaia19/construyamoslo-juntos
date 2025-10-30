@@ -6,6 +6,7 @@ import activityWaterColors from "@/assets/activity-water-colors.jpg";
 import activitySounds from "@/assets/activity-sounds.jpg";
 import activityBuilding from "@/assets/activity-building.jpg";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiFetch } from "@/lib/api";
 
 const heroFor = (id?: string) => {
   switch (id) {
@@ -30,7 +31,7 @@ const Activity = () => {
     const load = async () => {
       try {
         if (!id) return;
-        const resp = await fetch(`/api/activity/${id}`);
+        const resp = await apiFetch(`/api/activity/${id}`);
         if (resp.ok) {
           const data = await resp.json();
           setContent(data);

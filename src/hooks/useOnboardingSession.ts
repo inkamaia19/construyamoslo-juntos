@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Material, Environment, Interest } from "@/types/onboarding";
+import { apiFetch } from "@/lib/api";
 
 export const useOnboardingSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -17,7 +18,7 @@ export const useOnboardingSession = () => {
         const notExpired = Date.now() - lastActive <= INACTIVITY_MS;
 
         if (storedSessionId && storedSecret && notExpired) {
-          const resp = await fetch(`/api/session/${storedSessionId}`, {
+          const resp = await apiFetch(`/api/session/${storedSessionId}`, {
             headers: { "x-session-secret": storedSecret },
           });
           if (resp.ok) {
@@ -46,9 +47,9 @@ export const useOnboardingSession = () => {
       const lastActive = Number(localStorage.getItem("onboarding_last_active_at") || 0);
       const notExpired = Date.now() - lastActive <= INACTIVITY_MS;
       if (storedSessionId && storedSecret && notExpired) {
-        const resp = await fetch(`/api/session/${storedSessionId}`, {
-          headers: { "x-session-secret": storedSecret },
-        });
+      const resp = await apiFetch(`/api/session/${storedSessionId}`, {
+        headers: { "x-session-secret": storedSecret },
+      });
         if (resp.ok) {
           setSessionId(storedSessionId);
           setSessionSecret(storedSecret);
@@ -58,7 +59,7 @@ export const useOnboardingSession = () => {
         }
       }
 
-      const resp = await fetch(`/api/session`, { method: "POST" });
+      const resp = await apiFetch(`/api/session`, { method: "POST" });
       if (!resp.ok) throw new Error("Failed to create session");
       const data = await resp.json();
       setSessionId(data.id);
@@ -95,7 +96,7 @@ export const useOnboardingSession = () => {
     try {
       localStorage.removeItem("onboarding_session_id");
       localStorage.removeItem("onboarding_session_secret");
-      const resp = await fetch(`/api/session`, { method: "POST" });
+      const resp = await apiFetch(`/api/session`, { method: "POST" });
       if (!resp.ok) throw new Error("Failed to create session");
       const data = await resp.json();
       setSessionId(data.id);
@@ -123,7 +124,7 @@ export const useOnboardingSession = () => {
     try {
       const currentId = sessionId || localStorage.getItem("onboarding_session_id");
       const currentSecret = sessionSecret || localStorage.getItem("onboarding_session_secret") || "";
-      const resp = await fetch(`/api/session/${currentId}`, {
+      const resp = await apiFetch(`/api/session/${currentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "x-session-secret": currentSecret },
         body: JSON.stringify(updates),
@@ -133,7 +134,7 @@ export const useOnboardingSession = () => {
         await initializeSession();
         const retryId = localStorage.getItem("onboarding_session_id");
         const retrySecret = localStorage.getItem("onboarding_session_secret") || "";
-        await fetch(`/api/session/${retryId}`, {
+        await apiFetch(`/api/session/${retryId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", "x-session-secret": retrySecret },
           body: JSON.stringify(updates),
@@ -151,7 +152,7 @@ export const useOnboardingSession = () => {
     if (!sessionId) return null;
 
     try {
-      const resp = await fetch(`/api/session/${sessionId}`, {
+      const resp = await apiFetch(`/api/session/${sessionId}`, {
         headers: { "x-session-secret": sessionSecret || "" },
       });
       if (!resp.ok) throw new Error("Failed to get session");
