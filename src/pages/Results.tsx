@@ -58,13 +58,46 @@ const Results = () => {
       const parsedMaterials: Material[] = session.materials as unknown as Material[];
       setMaterials(parsedMaterials);
       
-      // Filter activities based on available materials
-      const functionalMaterials = parsedMaterials
-        .filter(m => m.state === "functional" || m.state === "semi_functional")
-        .map(m => m.id);
-      
-      // For now, show all activities (in real app, filter by materials)
-      setActivities(allActivities.slice(0, 3));
+      // Filter activities based on available materials and interest/environment
+      const functionalMaterials = new Set(
+        parsedMaterials
+          .filter(m => m.state === "functional" || m.state === "semi_functional")
+          .map(m => m.id)
+      );
+
+      const interest = (session?.interest as string | undefined) || undefined;
+      const environment = (session?.environment as string | undefined) || undefined;
+
+      const filtered = allActivities.filter(a => {
+        // Require at least one matching material
+        const materialMatch = a.materials.some(m => {
+          const map: Record<string, string> = {
+            botellas: "bottles",
+            cartones: "cardboard",
+            tijeras: "scissors",
+            pinturas: "paint",
+            palitos: "sticks",
+          };
+          const id = map[m] || m;
+          return functionalMaterials.has(id);
+        });
+
+        // Light weighting by interest
+        const interestBias = interest
+          ? (interest === "water_bubbles" && a.id.includes("water")) ||
+            (interest === "sounds_rhythm" && a.id.includes("sound")) ||
+            (interest === "building" && a.id.includes("cardboard")) ||
+            (interest === "art_coloring" && a.id.includes("color")) ||
+            (interest === "discover")
+          : true;
+
+        // Environment hint (soft)
+        const envBias = environment ? true : true;
+
+        return materialMatch && interestBias && envBias;
+      });
+
+      setActivities((filtered.length ? filtered : allActivities).slice(0, 3));
     };
 
     if (!isLoading && sessionId) {

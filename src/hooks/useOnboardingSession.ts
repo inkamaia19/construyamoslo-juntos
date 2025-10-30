@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Material, Environment, Interest } from "@/types/onboarding";
 
 export const useOnboardingSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [sessionSecret, setSessionSecret] = useState<string | null>(null);
 
   useEffect(() => {
     initializeSession();
@@ -14,33 +14,26 @@ export const useOnboardingSession = () => {
     try {
       // Check if we have a session ID in localStorage
       const storedSessionId = localStorage.getItem("onboarding_session_id");
-      
-      if (storedSessionId) {
-        // Verify the session exists in the database
-        const { data, error } = await supabase
-          .from("onboarding_sessions")
-          .select("id")
-          .eq("id", storedSessionId)
-          .maybeSingle();
-
-        if (data && !error) {
+      const storedSecret = localStorage.getItem("onboarding_session_secret");
+      if (storedSessionId && storedSecret) {
+        const resp = await fetch(`/api/session/${storedSessionId}`, {
+          headers: { "x-session-secret": storedSecret },
+        });
+        if (resp.ok) {
           setSessionId(storedSessionId);
+          setSessionSecret(storedSecret);
           setIsLoading(false);
           return;
         }
       }
 
-      // Create a new session
-      const { data: newSession, error } = await supabase
-        .from("onboarding_sessions")
-        .insert({})
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setSessionId(newSession.id);
-      localStorage.setItem("onboarding_session_id", newSession.id);
+      const resp = await fetch(`/api/session`, { method: "POST" });
+      if (!resp.ok) throw new Error("Failed to create session");
+      const data = await resp.json();
+      setSessionId(data.id);
+      setSessionSecret(data.session_secret);
+      localStorage.setItem("onboarding_session_id", data.id);
+      localStorage.setItem("onboarding_session_secret", data.session_secret);
     } catch (error) {
       console.error("Error initializing session:", error);
     } finally {
@@ -57,17 +50,12 @@ export const useOnboardingSession = () => {
     if (!sessionId) return;
 
     try {
-      const dbUpdates: any = { ...updates };
-      if (updates.materials) {
-        dbUpdates.materials = JSON.parse(JSON.stringify(updates.materials));
-      }
-
-      const { error } = await supabase
-        .from("onboarding_sessions")
-        .update(dbUpdates)
-        .eq("id", sessionId);
-
-      if (error) throw error;
+      const resp = await fetch(`/api/session/${sessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", "x-session-secret": sessionSecret || "" },
+        body: JSON.stringify(updates),
+      });
+      if (!resp.ok) throw new Error("Failed to update session");
     } catch (error) {
       console.error("Error updating session:", error);
     }
@@ -77,14 +65,11 @@ export const useOnboardingSession = () => {
     if (!sessionId) return null;
 
     try {
-      const { data, error } = await supabase
-        .from("onboarding_sessions")
-        .select("*")
-        .eq("id", sessionId)
-        .single();
-
-      if (error) throw error;
-      return data;
+      const resp = await fetch(`/api/session/${sessionId}`, {
+        headers: { "x-session-secret": sessionSecret || "" },
+      });
+      if (!resp.ok) throw new Error("Failed to get session");
+      return await resp.json();
     } catch (error) {
       console.error("Error getting session:", error);
       return null;
