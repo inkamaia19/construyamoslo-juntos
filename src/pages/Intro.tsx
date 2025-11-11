@@ -23,7 +23,7 @@ const Intro = () => {
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background animate-fade-in">
       <header className="flex-1 min-h-[55vh] relative">
         <img
-          src="/intro/hero-background.png"
+          src="/intro/hero-background.webp"
           alt="Ilustración de un niño jugando y construyendo una torre con materiales reciclados"
           className="h-full w-full object-cover"
         />
