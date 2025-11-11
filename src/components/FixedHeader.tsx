@@ -1,10 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import ProgressBar from "@/components/ProgressBar";
+import { ArrowLeft } from "lucide-react";
 
 interface FixedHeaderProps {
-  currentStep: number;
-  totalSteps: number;
+  currentStep?: number;
+  totalSteps?: number;
   backTo: string | number;
   title: string;
 }
@@ -17,21 +17,15 @@ const FixedHeader = ({ currentStep, totalSteps, backTo, title }: FixedHeaderProp
   };
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-40 backdrop-blur bg-background/70 border-b">
-      <div className="max-w-4xl mx-auto p-4 flex items-center gap-4">
-        <Button variant="outline" onClick={handleBack} className="rounded-full">
-          ← Atrás
-        </Button>
-        <div className="flex-1">
-          <div className="text-sm mb-2 text-muted-foreground">
-            Paso {currentStep} de {totalSteps} · {title}
-          </div>
-          <ProgressBar currentStep={currentStep} totalSteps={totalSteps} />
-        </div>
+    <header className="flex items-center p-4">
+      <Button variant="ghost" size="icon" onClick={handleBack}>
+        <ArrowLeft className="h-6 w-6" />
+      </Button>
+      <div className="flex-1 text-center font-semibold text-muted-foreground pr-10">
+        {currentStep && totalSteps ? `Paso ${currentStep} de ${totalSteps}` : title}
       </div>
-    </div>
+    </header>
   );
 };
 
 export default FixedHeader;
-

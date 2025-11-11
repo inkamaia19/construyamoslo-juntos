@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "../_db.js";
+import { getPool } from "../_db";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
@@ -10,7 +10,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const { rows } = await pool.query(
       `SELECT id, title, difficulty, required_materials, optional_materials, objective,
-              duration_minutes, age_min, age_max, steps, tips, safety
+              duration_minutes, age_min, age_max, steps, tips, safety, image_url
          FROM public.activities WHERE id = $1`,
       [id]
     );
@@ -18,6 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.json(rows[0]);
   } catch (err: any) {
     console.error("Activity details error:", err?.message || err);
-    return res.status(500).json({ error: "Failed to fetch activity" });
+    return res.status(500).json({ error: "Failed to fetch activity", detail: err?.message });
   }
 }

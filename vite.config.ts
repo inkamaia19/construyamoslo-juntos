@@ -5,16 +5,9 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  server: {
-    host: "::",
-    port: 8080,
-    proxy: {
-      "/api": {
-        target: process.env.VITE_API_URL || "http://localhost:5174",
-        changeOrigin: true,
-      },
-    },
-  },
+  // La sección 'server' ha sido eliminada por completo.
+  // Esto es crucial para que 'vercel dev' funcione correctamente.
+  
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   resolve: {
     alias: {

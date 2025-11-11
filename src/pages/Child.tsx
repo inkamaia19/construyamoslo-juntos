@@ -1,123 +1,92 @@
 import { useState, useEffect } from "react";
-import FixedHeader from "@/components/FixedHeader";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
+import OnboardingProgress from "@/components/OnboardingProgress";
+import OnboardingSkeleton from "@/components/OnboardingSkeleton";
 
-const quickAges = [3, 4, 5];
 const timeOptions = [
-  { id: "short", label: "Corto (≤15m)" },
-  { id: "medium", label: "Medio (≤30m)" },
-  { id: "long", label: "Largo (30m+)" },
+  { id: "short", label: "Poco (15 min)" },
+  { id: "medium", label: "Algo (30 min)" },
+  { id: "long", label: "Mucho (+30 min)" },
 ];
+const ageOptions = [3, 4, 5];
 
 const Child = () => {
   const navigate = useNavigate();
-  const { getSession, updateSession } = useOnboardingSession();
+  const { getSession, updateSession, isLoading } = useOnboardingSession();
   const [age, setAge] = useState<number | null>(null);
-  const [customAge, setCustomAge] = useState<string>("");
-  const [showCustomAge, setShowCustomAge] = useState(false);
   const [time, setTime] = useState<string>("");
 
   useEffect(() => {
-    const load = async () => {
-      const s = await getSession();
-      if (s?.child_age) setAge(Number(s.child_age));
-      if (s?.time_available) setTime(String(s.time_available));
+    const loadSessionData = async () => {
+      const session = await getSession();
+      if (session) {
+        setAge(session.child_age ? Number(session.child_age) : null);
+        setTime(session.time_available || "");
+      }
     };
-    load();
-  }, []);
 
-  const chooseAge = async (val: number) => {
-    setAge(val);
-    await updateSession({ child_age: val });
-  };
-
-  const applyCustomAge = async () => {
-    const n = Number(customAge);
-    if (!isNaN(n) && n > 0) {
-      await chooseAge(n);
-      setShowCustomAge(false);
+    if (!isLoading) {
+      loadSessionData();
     }
-  };
-
-  const chooseTime = async (val: string) => {
-    setTime(val);
-    await updateSession({ time_available: val });
-  };
+  }, [isLoading, getSession]);
 
   const canContinue = age !== null && time !== "";
 
+  const handleContinue = async () => {
+    if (!canContinue) return;
+    await updateSession({
+      child_age: age,
+      time_available: time,
+    });
+    navigate("/materials", { replace: true });
+  };
+
+  if (isLoading) {
+    return <OnboardingSkeleton currentStep={2} totalSteps={6} backTo="/parent" />;
+  }
+
   return (
-    <div className="min-h-screen p-6 pt-24 pb-40 animate-fade-in">
-      <FixedHeader currentStep={3} totalSteps={7} backTo="/welcome" title="Datos del niño" />
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="space-y-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold">Conozcamos un poco a tu explorador</h2>
-          <p className="text-lg text-muted-foreground">Así afinamos las propuestas y el ritmo</p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2">
+    <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12 animate-fade-in">
+      <OnboardingProgress currentStep={2} totalSteps={6} backTo="/parent" />
+      <Card className="w-full max-w-md flex flex-1 flex-col shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold">Sobre tu explorador</CardTitle>
+          <CardDescription>Esto nos ayuda a elegir el ritmo perfecto.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col justify-center gap-8 text-center">
           <div className="space-y-3">
-            <h3 className="font-semibold">Edad</h3>
-            <div className="flex gap-3 flex-wrap">
-              {quickAges.map((a) => (
-                <Button
-                  key={a}
-                  size="lg"
-                  variant={age === a ? "default" : "outline"}
-                  className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
-                  onClick={() => chooseAge(a)}
-                >
-                  +{a}
-                </Button>
+            <h3 className="font-semibold text-foreground">¿Qué edad tiene?</h3>
+            <div className="flex justify-center gap-3">
+              {ageOptions.map(a => (
+                <Button key={a} variant={age === a ? "default" : "outline"} className="rounded-full h-16 w-16 text-xl" onClick={() => setAge(a)}>{a}</Button>
               ))}
-              <Button
-                size="lg"
-                variant={showCustomAge ? "default" : "outline"}
-                className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
-                onClick={() => setShowCustomAge((v) => !v)}
-              >
-                Más…
-              </Button>
+              <Button variant={age && !ageOptions.includes(age) ? "default" : "outline"} className="rounded-full h-16 w-16 text-xl" onClick={() => setAge(6)}>+5</Button>
             </div>
-            {showCustomAge && (
-              <div className="flex gap-2 items-end">
-                <div className="flex-1">
-                  <Input type="number" min={1} max={10} placeholder="Edad en años" value={customAge} onChange={(e) => setCustomAge(e.target.value)} />
-                </div>
-                <Button onClick={applyCustomAge} className="rounded-full">Listo</Button>
-              </div>
-            )}
           </div>
-
           <div className="space-y-3">
-            <h3 className="font-semibold">Tiempo disponible</h3>
-            <div className="flex gap-3 flex-wrap">
-              {timeOptions.map((t) => (
-                <Button
-                  key={t.id}
-                  size="lg"
-                  variant={time === t.id ? "default" : "outline"}
-                  className="rounded-full h-12 md:h-14 px-6 md:px-8 text-base md:text-lg"
-                  onClick={() => chooseTime(t.id)}
-                >
-                  {t.label}
-                </Button>
+            <h3 className="font-semibold text-foreground">¿Cuánto tiempo tienen hoy?</h3>
+            <div className="flex justify-center gap-2 md:gap-3 flex-wrap">
+              {timeOptions.map(t => (
+                <Button key={t.id} variant={time === t.id ? "default" : "outline"} className="rounded-full h-14 px-6 text-base" onClick={() => setTime(t.id)}>{t.label}</Button>
               ))}
             </div>
           </div>
-        </div>
-
-        <div className="p-6">
-          <div className="max-w-sm sm:max-w-md mx-auto">
-            <Button disabled={!canContinue} size="lg" className="w-full whitespace-normal break-words text-base sm:text-lg md:text-xl leading-snug py-4 px-5 sm:py-6 sm:px-8 rounded-full justify-center text-center" onClick={() => navigate("/welcome", { replace: true })}>
-              Continuar
-            </Button>
-          </div>
-        </div>
-      </div>
+        </CardContent>
+        <CardFooter>
+          <Button
+            disabled={!canContinue}
+            size="lg"
+            className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
+            style={{ backgroundColor: "#FF8A6C" }}
+            onClick={handleContinue}
+          >
+            Continuar
+          </Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

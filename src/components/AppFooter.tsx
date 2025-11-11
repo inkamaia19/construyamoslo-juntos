@@ -1,42 +1,42 @@
-import { useLocation } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Materials from "./pages/Materials";
+import Evaluation from "./pages/Evaluation";
+import Space from "./pages/Space";
+import Interest from "./pages/Interest";
+import Results from "./pages/Results";
+import NotFound from "./pages/NotFound";
+import Activity from "./pages/Activity";
+import Child from "./pages/Child";
+import Intro from "./pages/Intro";
+import Parent from "./pages/Parent";
 
-const messages: Record<string, string> = {
-  child: "Estos datos ayudan a proponer actividades adecuadas a su ritmo.",
-  materials: "Saber qué hay disponible nos ayuda a sugerir actividades con lo cotidiano.",
-  evaluation: "Evaluar el estado permite proponer actividades seguras y alcanzables.",
-  space: "El lugar define el tipo de movimiento y materiales adecuados.",
-  interest: "Partimos del interés del niño para sostener la motivación y la autonomía.",
-  results: "Te mostramos sugerencias basadas en tu selección.",
-  activity: "Detalle de actividad con pasos y recomendaciones.",
-};
+const queryClient = new QueryClient();
 
-const getKey = (pathname: string) => {
-  if (pathname.startsWith("/child")) return "child";
-  if (pathname.startsWith("/materials")) return "materials";
-  if (pathname.startsWith("/evaluation")) return "evaluation";
-  if (pathname.startsWith("/space")) return "space";
-  if (pathname.startsWith("/interest")) return "interest";
-  if (pathname.startsWith("/activity")) return "activity";
-  if (pathname.startsWith("/results")) return "results";
-  return "";
-};
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Intro />} />
+          <Route path="/parent" element={<Parent />} />
+          <Route path="/child" element={<Child />} />
+          <Route path="/materials" element={<Materials />} />
+          <Route path="/evaluation" element={<Evaluation />} />
+          <Route path="/space" element={<Space />} />
+          <Route path="/interest" element={<Interest />} />
+          <Route path="/results" element={<Results />} />
+          <Route path="/activity/:id" element={<Activity />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
-const AppFooter = () => {
-  const { pathname } = useLocation();
-  const key = getKey(pathname);
-  const text = key ? messages[key] : "";
-  if (!text) return null;
-  // Ocultar footer en la intro para evitar scroll o superposición
-  if (pathname.startsWith("/intro")) return null;
-  return (
-    <div id="app-footer" className="sticky bottom-0 left-0 right-0 z-20">
-      <div className="max-w-4xl mx-auto px-4 pb-3">
-        <div className="rounded-2xl border bg-card/60 backdrop-blur px-4 py-3 text-xs text-muted-foreground">
-          <span className="font-semibold">¿Por qué te preguntamos esto?</span> {text}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default AppFooter;
+export default App;

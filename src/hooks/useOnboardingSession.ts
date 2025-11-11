@@ -1,59 +1,37 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Material, Environment, Interest } from "@/types/onboarding";
 import { apiFetch } from "@/lib/api";
 
 export const useOnboardingSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Empieza en true
   const [sessionSecret, setSessionSecret] = useState<string | null>(null);
-  const INACTIVITY_MS = 5 * 60 * 1000; // 5 minutes
+  const INACTIVITY_MS = 5 * 60 * 1000;
 
-  useEffect(() => {
-    // Try to resume session without creating a new one
-    const tryResume = async () => {
-      try {
-        const storedSessionId = localStorage.getItem("onboarding_session_id");
-        const storedSecret = localStorage.getItem("onboarding_session_secret");
-        const lastActive = Number(localStorage.getItem("onboarding_last_active_at") || 0);
-        const notExpired = Date.now() - lastActive <= INACTIVITY_MS;
-
-        if (storedSessionId && storedSecret && notExpired) {
-          const resp = await apiFetch(`/api/session/${storedSessionId}`, {
-            headers: { "x-session-secret": storedSecret },
-          });
-          if (resp.ok) {
-            setSessionId(storedSessionId);
-            setSessionSecret(storedSecret);
-          } else if (resp.status === 404) {
-            // Clear stale session references so we can create a new one later
-            localStorage.removeItem("onboarding_session_id");
-            localStorage.removeItem("onboarding_session_secret");
-          }
-        }
-      } catch (e) {
-        console.error("Error resuming session:", e);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    tryResume();
+  const touchSession = useCallback(() => {
+    localStorage.setItem("onboarding_last_active_at", String(Date.now()));
   }, []);
 
-  const initializeSession = async () => {
+  const ensureSession = useCallback(async () => {
+    // Si ya tenemos una sesión, no hacemos nada.
+    if (sessionId) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Check if we have a session ID in localStorage
       const storedSessionId = localStorage.getItem("onboarding_session_id");
       const storedSecret = localStorage.getItem("onboarding_session_secret");
       const lastActive = Number(localStorage.getItem("onboarding_last_active_at") || 0);
       const notExpired = Date.now() - lastActive <= INACTIVITY_MS;
+
       if (storedSessionId && storedSecret && notExpired) {
-      const resp = await apiFetch(`/api/session/${storedSessionId}`, {
-        headers: { "x-session-secret": storedSecret },
-      });
+        const resp = await apiFetch(`/api/session/${storedSessionId}`, {
+          headers: { "x-session-secret": storedSecret },
+        });
         if (resp.ok) {
           setSessionId(storedSessionId);
           setSessionSecret(storedSecret);
-          setIsLoading(false);
           touchSession();
           return;
         }
@@ -68,52 +46,21 @@ export const useOnboardingSession = () => {
       localStorage.setItem("onboarding_session_secret", data.session_secret);
       touchSession();
     } catch (error) {
-      console.error("Error initializing session:", error);
+      console.error("Error ensuring session:", error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sessionId, touchSession]);
 
-  const ensureSession = async () => {
-    const lastActive = Number(localStorage.getItem("onboarding_last_active_at") || 0);
-    const notExpired = Date.now() - lastActive <= INACTIVITY_MS;
-    if (sessionId && sessionSecret && notExpired) {
-      touchSession();
-      return { id: sessionId, secret: sessionSecret } as const;
-    }
-    await initializeSession();
-    return {
-      id: localStorage.getItem("onboarding_session_id"),
-      secret: localStorage.getItem("onboarding_session_secret"),
-    } as const;
-  };
-
-  const touchSession = () => {
-    localStorage.setItem("onboarding_last_active_at", String(Date.now()));
-  };
-
-  const newSession = async () => {
-    try {
-      localStorage.removeItem("onboarding_session_id");
-      localStorage.removeItem("onboarding_session_secret");
-      const resp = await apiFetch(`/api/session`, { method: "POST" });
-      if (!resp.ok) throw new Error("Failed to create session");
-      const data = await resp.json();
-      setSessionId(data.id);
-      setSessionSecret(data.session_secret);
-      localStorage.setItem("onboarding_session_id", data.id);
-      localStorage.setItem("onboarding_session_secret", data.session_secret);
-    } catch (error) {
-      console.error("Error creating new session:", error);
-    }
-  };
-
+  // El useEffect ya no es necesario aquí, la lógica se mueve al SessionLoader.
+  
+  // ... (el resto del hook se mantiene igual)
   const updateSession = async (updates: {
     materials?: Material[];
     environment?: Environment;
     interest?: Interest;
     completed?: boolean;
-    child_age?: number;
+    child_age?: number | null;
     child_name?: string;
     time_available?: string;
     parent_email?: string;
@@ -122,30 +69,22 @@ export const useOnboardingSession = () => {
     parent_last_name?: string;
     parent_phone?: string;
   }) => {
-    if (!sessionId || !sessionSecret) {
-      await ensureSession();
+    const currentId = sessionId || localStorage.getItem("onboarding_session_id");
+    const currentSecret = sessionSecret || localStorage.getItem("onboarding_session_secret");
+
+    if (!currentId || !currentSecret) {
+      console.error("Attempted to update session without ID or secret.");
+      return;
     }
 
     try {
-      const currentId = sessionId || localStorage.getItem("onboarding_session_id");
-      const currentSecret = sessionSecret || localStorage.getItem("onboarding_session_secret") || "";
       const resp = await apiFetch(`/api/session/${currentId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json", "x-session-secret": currentSecret },
         body: JSON.stringify(updates),
       });
-      if (resp.status === 404) {
-        // Session invalidated or expired on server, recreate and retry once
-        await initializeSession();
-        const retryId = localStorage.getItem("onboarding_session_id");
-        const retrySecret = localStorage.getItem("onboarding_session_secret") || "";
-        await apiFetch(`/api/session/${retryId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json", "x-session-secret": retrySecret },
-          body: JSON.stringify(updates),
-        });
-      } else if (!resp.ok && resp.status !== 204) {
-        throw new Error("Failed to update session");
+      if (!resp.ok && resp.status !== 204) {
+        throw new Error(`Failed to update session: ${resp.statusText}`);
       }
       touchSession();
     } catch (error) {
@@ -154,11 +93,14 @@ export const useOnboardingSession = () => {
   };
 
   const getSession = async () => {
-    if (!sessionId) return null;
+    const currentId = sessionId || localStorage.getItem("onboarding_session_id");
+    const currentSecret = sessionSecret || localStorage.getItem("onboarding_session_secret");
+
+    if (!currentId || !currentSecret) return null;
 
     try {
-      const resp = await apiFetch(`/api/session/${sessionId}`, {
-        headers: { "x-session-secret": sessionSecret || "" },
+      const resp = await apiFetch(`/api/session/${currentId}`, {
+        headers: { "x-session-secret": currentSecret },
       });
       if (!resp.ok) throw new Error("Failed to get session");
       const data = await resp.json();
@@ -176,8 +118,6 @@ export const useOnboardingSession = () => {
     sessionSecret,
     updateSession,
     getSession,
-    newSession,
     ensureSession,
-    touchSession,
   };
 };

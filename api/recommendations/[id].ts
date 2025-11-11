@@ -1,5 +1,35 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "../_db.js";
+import { getPool } from "../_db";
+
+const fallbackActivities = [
+  {
+    id: "water-colors",
+    title: "Explora colores con agua",
+    difficulty: "fácil",
+    required_materials: ["paint", "bottles"],
+    interests: ["water_bubbles", "art_coloring"],
+    environments: ["table", "garden"],
+    image_url: "/assets/activity-water-colors.jpg",
+  },
+  {
+    id: "bottle-sounds",
+    title: "Crea sonidos con botellas",
+    difficulty: "fácil",
+    required_materials: ["bottles", "sticks"],
+    interests: ["sounds_rhythm", "discover"],
+    environments: ["living_room", "garden"],
+    image_url: "/assets/activity-sounds.jpg",
+  },
+  {
+    id: "cardboard-construction",
+    title: "Construye con cartón",
+    difficulty: "medio",
+    required_materials: ["cardboard", "scissors"],
+    interests: ["building", "art_coloring"],
+    environments: ["table", "floor"],
+    image_url: "/assets/activity-building.jpg",
+  },
+];
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
@@ -29,11 +59,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let activities: any[] = [];
     try {
       const { rows } = await pool.query(
-        "SELECT id, title, difficulty, required_materials, interests, environments FROM public.activities"
+        "SELECT id, title, difficulty, required_materials, interests, environments, image_url FROM public.activities"
       );
       activities = rows;
-    } catch (_) {
-      activities = [];
+    } catch (dbError: any) {
+      console.error("Failed to fetch activities from DB, using fallback:", dbError?.message);
+      activities = fallbackActivities;
     }
 
     const scored = activities
@@ -61,6 +92,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.json({ items: scored });
   } catch (err: any) {
     console.error("Recommendations error:", err?.message || err);
-    return res.status(500).json({ error: "Failed to compute recommendations" });
+    return res.status(500).json({ error: "Failed to compute recommendations", detail: err?.message });
   }
 }

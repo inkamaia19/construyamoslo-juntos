@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "../_db.js";
+import { getPool } from "../_db";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pool = getPool();
@@ -19,7 +19,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json(rows[0]);
     } catch (err: any) {
       console.error("Get session error:", err?.message || err);
-      return res.status(500).json({ error: "Failed to fetch session" });
+      return res.status(500).json({ error: "Failed to fetch session", detail: err?.message });
     }
   }
 
@@ -83,7 +83,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         fields.push(`time_available = $${values.length + 1}`);
         values.push(timeVal);
       }
-
       const pEmail = parent_email ?? parentEmail;
       if (pEmail !== undefined) {
         fields.push(`parent_email = $${values.length + 1}`);
@@ -121,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json(rows[0]);
     } catch (err: any) {
       console.error("Patch session error:", err?.message || err);
-      return res.status(500).json({ error: "Failed to update session" });
+      return res.status(500).json({ error: "Failed to update session", detail: err?.message });
     }
   }
 

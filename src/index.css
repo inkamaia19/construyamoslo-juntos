@@ -2,101 +2,29 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
 @layer base {
   :root {
-    /* Reggio Emilia Palette - Soft, Natural, Warm */
-    --background: 45 100% 97%; /* beige claro #FFF8E7 */
-    --foreground: 25 30% 25%; /* dark brown for text */
-
-    --card: 0 0% 100%;
-    --card-foreground: 25 30% 25%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 25 30% 25%;
-
-    /* Verde menta #A7E0B2 as primary */
-    --primary: 135 48% 77%;
-    --primary-foreground: 25 30% 25%;
-
-    /* Naranja coral #FFB488 as secondary */
-    --secondary: 23 100% 76%;
-    --secondary-foreground: 25 30% 25%;
-
-    --muted: 45 50% 92%;
-    --muted-foreground: 25 20% 45%;
-
-    /* Azul cielo #B8E1FF as accent */
-    --accent: 205 100% 86%;
-    --accent-foreground: 25 30% 25%;
-
+    /* Tu paleta de colores existente... */
+    --background: 39 88% 95%; /* #FEF6E7 */
+    --foreground: 21 43% 26%; /* #5A3A2C */
+    --card: 39 88% 97%;
+    --card-foreground: 21 43% 26%;
+    --popover: 39 88% 95%;
+    --popover-foreground: 21 43% 26%;
+    --primary: 164 56% 52%; /* Menta #40C8A9 */
+    --primary-foreground: 21 43% 26%;
+    --secondary: 12 100% 71%; /* Coral #FF8A6C */
+    --secondary-foreground: 21 43% 26%;
+    --muted: 39 50% 90%;
+    --muted-foreground: 21 30% 40%;
+    --accent: 164 56% 52%;
+    --accent-foreground: 21 43% 26%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-
-    --border: 45 30% 88%;
-    --input: 45 30% 92%;
-    --ring: 135 48% 77%;
-
-    --radius: 1.25rem; /* More rounded for friendly feel */
-    
-    /* Custom Reggio colors */
-    --mint: 135 48% 77%; /* verde menta */
-    --coral: 23 100% 76%; /* naranja coral */
-    --sky: 205 100% 86%; /* azul cielo */
-    --cream: 45 100% 97%; /* beige claro */
-    
-    /* Transitions and animations */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
-  }
-
-  .dark {
-    --background: 25 20% 15%;
-    --foreground: 45 50% 95%;
-
-    --card: 25 20% 18%;
-    --card-foreground: 45 50% 95%;
-
-    --popover: 25 20% 18%;
-    --popover-foreground: 45 50% 95%;
-
-    --primary: 135 48% 77%;
-    --primary-foreground: 25 30% 25%;
-
-    --secondary: 23 100% 76%;
-    --secondary-foreground: 25 30% 25%;
-
-    --muted: 25 15% 25%;
-    --muted-foreground: 45 30% 65%;
-
-    --accent: 205 100% 86%;
-    --accent-foreground: 25 30% 25%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 45 50% 95%;
-
-    --border: 25 15% 25%;
-    --input: 25 15% 25%;
-    --ring: 135 48% 77%;
+    --border: 39 30% 88%;
+    --input: 39 50% 92%;
+    --ring: 164 56% 52%;
+    --radius: 1.5rem;
   }
 }
 
@@ -104,7 +32,6 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
     font-family: 'Nunito', 'Poppins', -apple-system, system-ui, sans-serif;
@@ -112,37 +39,20 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  .animate-bounce-soft {
-    animation: bounce-soft 0.4s ease-in-out;
-  }
-  
   .animate-slide-up {
-    animation: slide-up 0.3s ease-out;
+    animation: slide-up 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
-  
   .animate-fade-in {
-    animation: fade-in 0.3s ease-in-out;
+    animation: fade-in 0.5s ease-in-out;
   }
-  
-  .animate-grow {
-    animation: grow 0.4s ease-out;
+  .animate-zoom-in {
+    animation: zoom-in 1.5s ease-out;
   }
-}
-
-@keyframes bounce-soft {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
 }
 
 @keyframes slide-up {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fade-in {
@@ -150,7 +60,7 @@ All colors MUST be HSL.
   to { opacity: 1; }
 }
 
-@keyframes grow {
+@keyframes zoom-in {
   from {
     opacity: 0;
     transform: scale(0.95);

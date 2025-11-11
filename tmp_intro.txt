@@ -1,0 +1,163 @@
+﻿import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { Button } from "@/components/ui/button";
+import EnvironmentShowcase from "@/components/EnvironmentShowcase";
+
+const spacesGallery = {
+  kind: "gallery" as const,
+  title: "Tu espacio puede verse así­",
+  text: "Ejemplos reales de salas, mesas, pisos o jardines adaptados para explorar y crear.",
+  images: Array.from({ length: 7 }, (_, i) => `/intro/spaces/${i + 1}.jpeg`),
+};
+
+const slides = [
+  {
+    kind: "brand" as const,
+    title: "", // el logo ya comunica la marca
+    text: "App de asesoría educativa para familias con niños de 3 a 5 años.",
+    tagline: "Inspirada en la pedagogía Reggio Emilia.",
+    logo: "/intro/logo.png", // coloca tu logo aquÃ­ (public/intro/logo.png)
+  },
+  // GalerÃ­a de tus fotos enumeradas 1..7.jpeg
+  spacesGallery,
+  {
+    kind: "how" as const,
+    title: "CÃ³mo funciona nuestra asesorÃ­a",
+    text: "1) Conocemos a tu familia  â€¢  2) Exploramos lo que tienes en casa  â€¢  3) Recomendamos experiencias personalizadas.",
+    image: "/intro/asesoria.jpg",
+  },
+  {
+    kind: "method" as const,
+    title: "Enfoque Reggio Emilia",
+    text: "Seguimos los intereses del niÃ±o, preparamos ambientes y materiales abiertos, y acompaÃ±amos la curiosidad con afecto y lÃ­mites claros.",
+    image: "/intro/reggio.jpg",
+  },
+  {
+    kind: "spaces" as const,
+    title: "Ambientes adaptables",
+    text: "Sala, mesa, jardÃ­n o piso: cualquier espacio puede transformarse en un lugar de descubrimiento seguro y creativo.",
+    image: "/intro/ambientes.jpg",
+  },
+  {
+    kind: "spacesDynamic" as const,
+    title: "Tu espacio puede verse asÃ­",
+    text: "Mira ejemplos reales y sÃºbelos a /intro/spaces/ para personalizar.",
+  },
+  // ImÃ¡genes numeradas opcionales (1.jpeg .. 7.jpeg). Si no existen, se ocultan al fallar la carga.
+];
+
+const Intro = () => {\n  const navigate = useNavigate();\n  const [api, setApi] = useState<CarouselApi | null>(null);\n  const [atLast, setAtLast] = useState(false);\n\n  useEffect(() => {\n    if (!api) return;\n    const update = () => setAtLast(!api.canScrollNext());\n    update();\n    api.on("select", update);\n    api.on("reInit", update);\n    return () => {\n      api.off("select", update);\n    };\n  }, [api]);
+
+  return (
+    <div className="min-h-[100svh] w-full bg-background relative overflow-hidden">
+      <div className="min-h-[100svh] w-full flex flex-col">
+        <div className="flex-1">
+          <Carousel className=\"min-h-[100svh]\" setApi={setApi}>
+            <CarouselContent className="min-h-[100svh]">
+              {slides.map((s, i) => (
+                <CarouselItem key={i} className="basis-full min-h-[100svh]">
+                  <div className="relative min-h-[100svh] w-full">
+                    {s.kind === "brand" ? (
+                      <div className="min-h-[100svh] w-full flex flex-col items-center justify-center gap-8 p-6">
+                        <div className="h-40 w-40 md:h-52 md:w-52 rounded-3xl border bg-card flex items-center justify-center overflow-hidden shadow-sm">
+                          {/* Espacio de logo */}
+                          <img
+                            src={s.logo}
+                            alt="Minds in Action logo"
+                            className="h-full w-full object-contain p-5"
+                            width="208"
+                            height="208"
+                            loading="eager"
+                            fetchpriority="high"
+                            decoding="async"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).style.display = "none";
+                            }}
+                          />
+                        </div>
+                        <div className="max-w-2xl text-center space-y-2 animate-fade-in">
+                          {/* No repetimos el nombre; solo descripciÃ³n y tagline */}
+                          <p className="text-lg md:text-xl">{s.text}</p>
+                          <p className="text-sm md:text-base text-muted-foreground">{s.tagline}</p>
+                        </div>
+                        {/* BotÃ³n se muestra en la barra inferior global de esta vista */}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="absolute inset-0">
+                          {/* Imagen de fondo si el usuario la agrega en /public/intro */}
+                          {(s as any).image && (
+                            <>
+                              <img
+                                src={(s as any).image}
+                                alt={s.title}
+                                className="h-full w-full object-cover"
+                                onError={(e) => {
+                                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                                }}
+                              />
+                              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-background/70 to-transparent" />
+                            </>
+                          )}
+                        </div>
+                        <div className="relative z-10 min-h-[100svh] w-full flex flex-col items-center justify-center gap-8 px-6">
+                          <div className="max-w-2xl mx-auto text-center space-y-4 animate-fade-in">
+                            <h2 className="text-4xl md:text-5xl font-extrabold tracking-tight">{s.title}</h2>
+                            <p className="text-lg md:text-xl text-muted-foreground">{s.text}</p>
+                          </div>
+                          {s.kind === "gallery" && (
+                            <div className="w-full max-w-5xl mx-auto px-6">
+                              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                                {(s as any).images.map((src: string, idx: number) => (
+                                  <div key={idx} className="relative overflow-hidden rounded-3xl border bg-card">
+                                    <img
+                                      src={src}
+                                      alt={`espacio ${idx + 1}`}
+                                      className="h-40 w-full object-cover md:h-56"
+                                      loading="lazy"
+                                      decoding="async"
+                                      onError={(e) => {
+                                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                                      }}
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {s.kind === "spacesDynamic" && (
+                            <EnvironmentShowcase />
+                          )}
+                          {/* BotÃ³n se muestra en la barra inferior global de esta vista */}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
+        {/* Barra inferior con CTA sobrepuesta para no generar scroll */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          <div className="max-w-sm sm:max-w-md mx-auto w-full">
+            <Button
+              size="lg"
+              className="w-full rounded-full text-base sm:text-lg md:text-xl py-4 sm:py-6 bg-mint text-foreground hover:bg-mint/90"
+              onClick={() => {\n                if (!atLast) api?.scrollNext();\n                else navigate("/parent", { replace: true });\n              }}
+            >\n              {atLast ? "Continuar" : "Siguiente"}\n            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Intro;
+
+
+
+
+
+
