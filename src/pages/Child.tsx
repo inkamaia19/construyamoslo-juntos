@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "react-router-dom";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
+import { Loader2 } from "lucide-react";
 
 const timeOptions = [
   { id: "short", label: "Poco (15 min)" },
@@ -17,6 +18,8 @@ const Child = () => {
   const { getSession, updateSession } = useSession();
   const [age, setAge] = useState<number | null>(null);
   const [time, setTime] = useState<string>("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isReady, setIsReady] = useState(false); // <-- NUEVO ESTADO para controlar la carga inicial
 
   useEffect(() => {
     const loadSessionData = async () => {
@@ -25,20 +28,25 @@ const Child = () => {
         setAge(session.child_age ? Number(session.child_age) : null);
         setTime(session.time_available || "");
       }
+      // Una vez que los datos se han cargado (o se ha intentado), marcamos la página como lista.
+      setIsReady(true); 
     };
-
     loadSessionData();
   }, [getSession]);
 
   const canContinue = age !== null && time !== "";
 
-  const handleContinue = async () => {
-    if (!canContinue) return;
-    await updateSession({
+  const handleContinue = () => {
+    // Añadimos una comprobación extra: la página debe estar lista.
+    if (!canContinue || isSaving || !isReady) return;
+    
+    setIsSaving(true);
+    navigate("/materials", { replace: true });
+
+    updateSession({
       child_age: age,
       time_available: time,
-    });
-    navigate("/materials", { replace: true });
+    }).finally(() => setIsSaving(false));
   };
 
   return (
@@ -70,13 +78,14 @@ const Child = () => {
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!canContinue}
+            // El botón ahora también depende de `isReady`.
+            disabled={!canContinue || isSaving || !isReady}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
             onClick={handleContinue}
           >
-            Continuar
+            {isSaving || !isReady ? <Loader2 className="h-6 w-6 animate-spin" /> : "Continuar"}
           </Button>
         </CardFooter>
       </Card>

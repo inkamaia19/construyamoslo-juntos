@@ -6,8 +6,9 @@ import MaterialIcon from "@/components/MaterialIcon";
 import { Material } from "@/types/onboarding";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
+import { Loader2 } from "lucide-react";
 
-const availableMaterials: Material[] = [
+const availableMaterials: Omit<Material, 'state'>[] = [
   { id: "cardboard", name: "Cartones", emoji: "📦" },
   { id: "bottles", name: "Botellas", emoji: "🧃" },
   { id: "scissors", name: "Tijeras", emoji: "✂️" },
@@ -23,13 +24,16 @@ const Materials = () => {
   const navigate = useNavigate();
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
   const { updateSession, getSession } = useSession();
+  const [isSaving, setIsSaving] = useState(false);
+  const [initialMaterials, setInitialMaterials] = useState<Material[]>([]);
 
   useEffect(() => {
     const loadSavedMaterials = async () => {
       const session = await getSession();
       if (session?.materials && Array.isArray(session.materials)) {
-        const savedIds = (session.materials as Material[]).map(m => m.id);
-        setSelectedMaterials(new Set(savedIds));
+        const savedIds = new Set(session.materials.map(m => m.id));
+        setSelectedMaterials(savedIds);
+        setInitialMaterials(session.materials); // Guardamos los materiales iniciales con su estado
       }
     };
     loadSavedMaterials();
@@ -38,7 +42,11 @@ const Materials = () => {
   const toggleMaterial = (materialId: string) => {
     setSelectedMaterials(prev => {
       const newSet = new Set(prev);
-      newSet.has(materialId) ? newSet.delete(materialId) : newSet.add(materialId);
+      if (newSet.has(materialId)) {
+        newSet.delete(materialId);
+      } else {
+        newSet.add(materialId);
+      }
       return newSet;
     });
   };
@@ -46,11 +54,28 @@ const Materials = () => {
   const MIN_SELECTED = 2;
   const canContinue = selectedMaterials.size >= MIN_SELECTED;
 
-  const handleContinue = async () => {
-    if (!canContinue) return;
-    const materials = availableMaterials.filter(m => selectedMaterials.has(m.id));
-    await updateSession({ materials });
+  const handleContinue = () => {
+    if (!canContinue || isSaving) return;
+    setIsSaving(true);
+    
+    // Construimos la lista final de materiales para guardar
+    const materialsToSave = availableMaterials
+      .filter(m => selectedMaterials.has(m.id))
+      .map(currentMaterial => {
+        // Buscamos si este material ya tenía un estado guardado
+        const existingMaterial = initialMaterials.find(im => im.id === currentMaterial.id);
+        return {
+          ...currentMaterial,
+          // Si ya tenía un estado (ej. "functional"), lo preservamos. Si no, queda undefined.
+          state: existingMaterial?.state, 
+        };
+      });
+
+    // Navegación optimista
     navigate("/evaluation", { replace: true });
+
+    // Guardado en segundo plano
+    updateSession({ materials: materialsToSave }).finally(() => setIsSaving(false));
   };
 
   return (
@@ -77,13 +102,13 @@ const Materials = () => {
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!canContinue}
+            disabled={!canContinue || isSaving}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
             onClick={handleContinue}
           >
-            {canContinue ? `Continuar (${selectedMaterials.size})` : `Elige ${MIN_SELECTED - selectedMaterials.size} más`}
+            {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : (canContinue ? `Continuar (${selectedMaterials.size})` : `Elige ${MIN_SELECTED - selectedMaterials.size} más`)}
           </Button>
         </CardFooter>
       </Card>

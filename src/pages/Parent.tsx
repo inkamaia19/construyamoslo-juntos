@@ -5,12 +5,14 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useNavigate } from "react-router-dom";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
+import { Loader2 } from "lucide-react";
 
 const Parent = () => {
   const navigate = useNavigate();
   const { getSession, updateSession } = useSession();
   const [firstName, setFirstName] = useState("");
   const [phone, setPhone] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadSessionData = async () => {
@@ -23,20 +25,29 @@ const Parent = () => {
     loadSessionData();
   }, [getSession]);
 
-  // Validación simple: al menos 5 dígitos para el teléfono.
-  // Puedes hacerla más estricta si lo necesitas.
-  const phoneValid = /^\d{5,}$/.test(phone.replace(/\s/g, ''));
+  // La validación ahora es más estricta: exactamente 9 dígitos.
+  const phoneValid = /^\d{9}$/.test(phone);
   const canContinue = firstName.trim().length > 1 && phoneValid;
 
-  const handleContinue = async () => {
-    if (!canContinue) return;
-    await updateSession({
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Usamos una expresión regular para eliminar cualquier cosa que no sea un dígito.
+    const numericValue = value.replace(/\D/g, '');
+    // Limitamos la longitud a 9 caracteres.
+    setPhone(numericValue.slice(0, 9));
+  };
+
+  const handleContinue = () => {
+    if (!canContinue || isSaving) return;
+    setIsSaving(true);
+    navigate("/child", { replace: true });
+
+    updateSession({
       parent_first_name: firstName.trim(),
       parent_phone: phone.trim(),
-      // Opcional: podrías guardar el email como vacío o nulo si lo tenías antes
-      // parent_email: null, 
+    }).finally(() => {
+      setIsSaving(false); 
     });
-    navigate("/child", { replace: true });
   };
 
   return (
@@ -57,23 +68,27 @@ const Parent = () => {
             autoComplete="name"
           />
           <Input
-            type="tel"
-            placeholder="Tu número de WhatsApp"
+            type="tel" // 'tel' es semánticamente correcto y ayuda a los móviles a mostrar el teclado numérico
+            placeholder="Tu número de WhatsApp (9 dígitos)"
             className="h-14 text-lg text-center rounded-full"
             value={phone}
-            onChange={(e) => setPhone(e.target.value)}
+            onChange={handlePhoneChange} // Usamos la nueva función de manejo
             autoComplete="tel"
           />
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!canContinue}
+            disabled={!canContinue || isSaving}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
             onClick={handleContinue}
           >
-            Continuar
+            {isSaving ? (
+              <Loader2 className="h-6 w-6 animate-spin" />
+            ) : (
+              "Continuar"
+            )}
           </Button>
         </CardFooter>
       </Card>

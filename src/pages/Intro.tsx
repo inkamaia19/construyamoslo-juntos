@@ -1,12 +1,21 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useSession } from "@/hooks/SessionContext";
 
 const Intro = () => {
   const navigate = useNavigate();
+  const { sessionId, createSession } = useSession();
 
-  // La creación de la sesión ya se hizo en el splash screen.
-  // Ahora solo navegamos.
-  const handleContinue = () => {
+  const handleContinue = async () => {
+    if (!sessionId) {
+      const newSession = await createSession();
+      if (!newSession) {
+        alert("Hubo un problema al iniciar. Por favor, intenta de nuevo.");
+        return;
+      }
+    }
+    
+    // Navegamos a la primera página del flujo, como debe ser.
     navigate("/parent", { replace: true });
   };
 

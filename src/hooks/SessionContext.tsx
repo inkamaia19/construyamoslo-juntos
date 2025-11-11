@@ -1,29 +1,27 @@
 import { createContext, useContext, useEffect, ReactNode } from "react";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { useOnboardingSession } from "@/hooks/useOnboardingSession.js";
 import SplashScreen from "@/pages/SplashScreen";
 
-// Define la "forma" de los datos que compartiremos
 type SessionContextType = ReturnType<typeof useOnboardingSession>;
 
-// Crea el contexto
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
-// Crea el Provider que envolverá la aplicación
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
   const session = useOnboardingSession();
-  const { isLoading, ensureSession } = session;
+  const { isLoading, loadSessionFromStorage } = session;
 
   useEffect(() => {
-    ensureSession();
-  }, [ensureSession]);
+    // Al iniciar la aplicación, solo intentamos cargar una sesión existente.
+    // No creamos una nueva aquí.
+    loadSessionFromStorage();
+  }, [loadSessionFromStorage]);
 
-  // Mientras la sesión se está verificando/creando, muestra el SplashScreen.
-  // Esto reemplaza la lógica del SessionLoader.
+  // Muestra una pantalla de carga mientras se verifica si existe una sesión.
   if (isLoading) {
     return <SplashScreen />;
   }
 
-  // Una vez que la sesión está lista, muestra el resto de la aplicación.
+  // Una vez verificado, se renderiza la aplicación.
   return (
     <SessionContext.Provider value={session}>
       {children}
@@ -31,7 +29,6 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Crea un hook personalizado para consumir el contexto fácilmente
 export const useSession = () => {
   const context = useContext(SessionContext);
   if (context === undefined) {

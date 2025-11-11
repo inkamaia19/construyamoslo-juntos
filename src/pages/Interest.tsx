@@ -6,6 +6,7 @@ import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
+import { Loader2 } from "lucide-react";
 
 const interests = [
   { id: "art_coloring" as InterestType, emoji: "🎨", label: "Arte", color: "coral" },
@@ -19,6 +20,7 @@ const Interest = () => {
   const navigate = useNavigate();
   const [selectedInterest, setSelectedInterest] = useState<InterestType | null>(null);
   const { updateSession, getSession } = useSession();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadSavedInterest = async () => {
@@ -30,11 +32,17 @@ const Interest = () => {
     loadSavedInterest();
   }, [getSession]);
 
-  const handleContinue = async () => {
-    if (selectedInterest) {
-      await updateSession({ interest: selectedInterest, completed: true });
+  const handleContinue = () => {
+    if (!selectedInterest || isSaving) return;
+    setIsSaving(true);
+    
+    // En el último paso, esperamos la confirmación antes de navegar a los resultados.
+    // El spinner en el botón proporciona la retroalimentación necesaria.
+    updateSession({ interest: selectedInterest, completed: true }).then(() => {
       navigate("/results", { replace: true });
-    }
+    }).finally(() => {
+      setIsSaving(false);
+    });
   };
 
   const colorClasses = {
@@ -73,13 +81,13 @@ const Interest = () => {
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!selectedInterest}
+            disabled={!selectedInterest || isSaving}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
             onClick={handleContinue}
           >
-            Ver Resultados ✨
+            {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "Ver Resultados ✨"}
           </Button>
         </CardFooter>
       </Card>

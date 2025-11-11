@@ -6,6 +6,7 @@ import MaterialIcon from "@/components/MaterialIcon";
 import { Environment } from "@/types/onboarding";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
+import { Loader2 } from "lucide-react";
 
 const spaces = [
   { id: "garden" as Environment, emoji: "🌳", label: "Jardín" },
@@ -19,6 +20,7 @@ const Space = () => {
   const navigate = useNavigate();
   const [selectedSpace, setSelectedSpace] = useState<Environment | null>(null);
   const { updateSession, getSession } = useSession();
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const loadSavedSpace = async () => {
@@ -30,11 +32,12 @@ const Space = () => {
     loadSavedSpace();
   }, [getSession]);
 
-  const handleContinue = async () => {
-    if (selectedSpace) {
-      await updateSession({ environment: selectedSpace });
-      navigate("/interest", { replace: true });
-    }
+  const handleContinue = () => {
+    if (!selectedSpace || isSaving) return;
+    setIsSaving(true);
+    navigate("/interest", { replace: true });
+    
+    updateSession({ environment: selectedSpace }).finally(() => setIsSaving(false));
   };
 
   return (
@@ -61,13 +64,13 @@ const Space = () => {
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!selectedSpace}
+            disabled={!selectedSpace || isSaving}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
             onClick={handleContinue}
           >
-            Siguiente
+            {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "Siguiente"}
           </Button>
         </CardFooter>
       </Card>
