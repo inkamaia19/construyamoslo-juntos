@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import { useNavigate } from "react-router-dom";
 import OnboardingProgress from "@/components/OnboardingProgress";
-import OnboardingSkeleton from "@/components/OnboardingSkeleton";
+import { useSession } from "@/hooks/SessionContext";
 
 const timeOptions = [
   { id: "short", label: "Poco (15 min)" },
@@ -15,7 +14,7 @@ const ageOptions = [3, 4, 5];
 
 const Child = () => {
   const navigate = useNavigate();
-  const { getSession, updateSession, isLoading } = useOnboardingSession();
+  const { getSession, updateSession } = useSession();
   const [age, setAge] = useState<number | null>(null);
   const [time, setTime] = useState<string>("");
 
@@ -28,10 +27,8 @@ const Child = () => {
       }
     };
 
-    if (!isLoading) {
-      loadSessionData();
-    }
-  }, [isLoading, getSession]);
+    loadSessionData();
+  }, [getSession]);
 
   const canContinue = age !== null && time !== "";
 
@@ -43,10 +40,6 @@ const Child = () => {
     });
     navigate("/materials", { replace: true });
   };
-
-  if (isLoading) {
-    return <OnboardingSkeleton currentStep={2} totalSteps={6} backTo="/parent" />;
-  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12 animate-fade-in">

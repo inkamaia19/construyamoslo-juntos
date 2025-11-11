@@ -1,8 +1,9 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "../_db";
+import { getPool } from "../_lib/db.js"; // <-- AÑADIR .js
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).json({ error: "Method not allowed" });
+  
   const pool = getPool();
   const { id } = req.query as { id: string };
   if (!id) return res.status(400).json({ error: "Missing id" });

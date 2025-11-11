@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MaterialIcon from "@/components/MaterialIcon";
 import { Environment } from "@/types/onboarding";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import OnboardingProgress from "@/components/OnboardingProgress";
-import OnboardingSkeleton from "@/components/OnboardingSkeleton";
+import { useSession } from "@/hooks/SessionContext";
 
 const spaces = [
   { id: "garden" as Environment, emoji: "🌳", label: "Jardín" },
@@ -19,7 +18,7 @@ const spaces = [
 const Space = () => {
   const navigate = useNavigate();
   const [selectedSpace, setSelectedSpace] = useState<Environment | null>(null);
-  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const { updateSession, getSession } = useSession();
 
   useEffect(() => {
     const loadSavedSpace = async () => {
@@ -28,10 +27,8 @@ const Space = () => {
         setSelectedSpace(session.environment as Environment);
       }
     };
-    if (!isLoading && sessionId) {
-      loadSavedSpace();
-    }
-  }, [isLoading, sessionId, getSession]);
+    loadSavedSpace();
+  }, [getSession]);
 
   const handleContinue = async () => {
     if (selectedSpace) {
@@ -39,10 +36,6 @@ const Space = () => {
       navigate("/interest", { replace: true });
     }
   };
-
-  if (isLoading) {
-    return <OnboardingSkeleton currentStep={5} totalSteps={6} backTo="/evaluation" />;
-  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12 animate-fade-in">

@@ -7,7 +7,7 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "bundler",
+    "moduleResolution": "bundler", // <-- ASEGÚRATE DE QUE ESTÉ ASÍ O SIMILAR
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -25,7 +25,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }],
-  "exclude": ["api"] // <-- AÑADE O ASEGÚRATE DE QUE ESTA LÍNEA EXISTA
+  "include": ["src", "api"], // <-- AÑADE "api" SI NO ESTÁ
+  "references": [{ "path": "./tsconfig.node.json" }]
 }

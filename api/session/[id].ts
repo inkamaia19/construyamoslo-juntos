@@ -1,16 +1,52 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getPool } from "../_db";
+import { getPool } from "../_lib/db.js"; // <-- AÑADIR .js
+
+// ... el resto del archivo se mantiene igual ...
+// Helper para mapear claves camelCase a snake_case y definir sus tipos
+const fieldMapping: Record<string, { key: string; type: 'string' | 'number' | 'boolean' | 'json' }> = {
+  materials: { key: "materials", type: "json" },
+  environment: { key: "environment", type: "string" },
+  interest: { key: "interest", type: "string" },
+  completed: { key: "completed", type: "boolean" },
+  child_age: { key: "child_age", type: "number" },
+  childAge: { key: "child_age", type: "number" },
+  child_name: { key: "child_name", type: "string" },
+  childName: { key: "child_name", type: "string" },
+  time_available: { key: "time_available", type: "string" },
+  timeAvailable: { key: "time_available", type: "string" },
+  parent_email: { key: "parent_email", type: "string" },
+  parentEmail: { key: "parent_email", type: "string" },
+  parent_context: { key: "parent_context", type: "string" },
+  parentContext: { key: "parent_context", type: "string" },
+  parent_first_name: { key: "parent_first_name", type: "string" },
+  parentFirstName: { key: "parent_first_name", type: "string" },
+  parent_last_name: { key: "parent_last_name", type: "string" },
+  parentLastName: { key: "parent_last_name", type: "string" },
+  parent_phone: { key: "parent_phone", type: "string" },
+  parentPhone: { key: "parent_phone", type: "string" },
+};
+
+function processValue(value: any, type: string) {
+  if (value === undefined) return undefined;
+  switch (type) {
+    case 'json': return JSON.stringify(value);
+    case 'boolean': return Boolean(value);
+    case 'number': return value === null ? null : Number(value);
+    default: return value;
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pool = getPool();
+  // ... el resto del archivo se mantiene igual ...
   const { id } = req.query as { id: string };
   const secret = (req.headers["x-session-secret"] as string) || (req.query.secret as string);
 
   if (!id) return res.status(400).json({ error: "Missing id" });
+  if (!secret) return res.status(401).json({ error: "Missing session secret" });
 
   if (req.method === "GET") {
     try {
-      if (!secret) return res.status(401).json({ error: "Missing session secret" });
       const { rows } = await pool.query(
         "SELECT * FROM public.onboarding_sessions WHERE id = $1 AND session_secret = $2",
         [id, secret]
@@ -25,88 +61,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method === "PATCH") {
     try {
-      if (!secret) return res.status(401).json({ error: "Missing session secret" });
       const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : (req.body || {});
-      const {
-        materials,
-        environment,
-        interest,
-        completed,
-        child_age,
-        childAge,
-        child_name,
-        childName,
-        time_available,
-        timeAvailable,
-        parent_email,
-        parentEmail,
-        parent_context,
-        parentContext,
-        parent_first_name,
-        parentFirstName,
-        parent_last_name,
-        parentLastName,
-        parent_phone,
-        parentPhone,
-      } = body;
-
+      
       const fields: string[] = [];
       const values: any[] = [];
-      if (materials !== undefined) {
-        fields.push(`materials = $${values.length + 1}`);
-        values.push(JSON.stringify(materials));
-      }
-      if (environment !== undefined) {
-        fields.push(`environment = $${values.length + 1}`);
-        values.push(environment);
-      }
-      if (interest !== undefined) {
-        fields.push(`interest = $${values.length + 1}`);
-        values.push(interest);
-      }
-      if (completed !== undefined) {
-        fields.push(`completed = $${values.length + 1}`);
-        values.push(Boolean(completed));
-      }
-      const ageVal = child_age ?? childAge;
-      if (ageVal !== undefined) {
-        fields.push(`child_age = $${values.length + 1}`);
-        values.push(ageVal === null ? null : Number(ageVal));
-      }
-      const nameVal = child_name ?? childName;
-      if (nameVal !== undefined) {
-        fields.push(`child_name = $${values.length + 1}`);
-        values.push(nameVal);
-      }
-      const timeVal = time_available ?? timeAvailable;
-      if (timeVal !== undefined) {
-        fields.push(`time_available = $${values.length + 1}`);
-        values.push(timeVal);
-      }
-      const pEmail = parent_email ?? parentEmail;
-      if (pEmail !== undefined) {
-        fields.push(`parent_email = $${values.length + 1}`);
-        values.push(pEmail);
-      }
-      const pCtx = parent_context ?? parentContext;
-      if (pCtx !== undefined) {
-        fields.push(`parent_context = $${values.length + 1}`);
-        values.push(pCtx);
-      }
-      const pFirst = parent_first_name ?? parentFirstName;
-      if (pFirst !== undefined) {
-        fields.push(`parent_first_name = $${values.length + 1}`);
-        values.push(pFirst);
-      }
-      const pLast = parent_last_name ?? parentLastName;
-      if (pLast !== undefined) {
-        fields.push(`parent_last_name = $${values.length + 1}`);
-        values.push(pLast);
-      }
-      const pPhone = parent_phone ?? parentPhone;
-      if (pPhone !== undefined) {
-        fields.push(`parent_phone = $${values.length + 1}`);
-        values.push(pPhone);
+      const seenDbKeys = new Set<string>();
+      
+      for (const key in body) {
+        if (fieldMapping[key]) {
+          const { key: dbKey, type } = fieldMapping[key];
+          if (!seenDbKeys.has(dbKey)) {
+            const value = processValue(body[key], type);
+            if (value !== undefined) {
+              fields.push(`${dbKey} = $${values.length + 1}`);
+              values.push(value);
+              seenDbKeys.add(dbKey);
+            }
+          }
+        }
       }
 
       if (fields.length === 0) return res.status(204).end();
@@ -115,6 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         values.length + 1
       } AND session_secret = $${values.length + 2} RETURNING *`;
       values.push(id, secret);
+      
       const { rows } = await pool.query(query, values);
       if (!rows[0]) return res.status(404).json({ error: "Not found" });
       return res.json(rows[0]);

@@ -4,30 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Material, MaterialState } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import OnboardingProgress from "@/components/OnboardingProgress";
-import OnboardingSkeleton from "@/components/OnboardingSkeleton";
+import { useSession } from "@/hooks/SessionContext";
 
 const Evaluation = () => {
   const navigate = useNavigate();
   const [materials, setMaterials] = useState<Material[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const { updateSession, getSession } = useSession();
 
   useEffect(() => {
     const loadMaterials = async () => {
       const session = await getSession();
-      if (session?.materials && Array.isArray(session.materials)) {
+      if (session?.materials && Array.isArray(session.materials) && session.materials.length > 0) {
         setMaterials(session.materials as unknown as Material[]);
-      } else if (!isLoading) {
-        navigate("/materials");
+      } else {
+        // Si no hay materiales, no podemos estar aquí. Volvemos al paso anterior.
+        navigate("/materials", { replace: true });
       }
     };
-
-    if (!isLoading && sessionId) {
-      loadMaterials();
-    }
-  }, [isLoading, sessionId, navigate, getSession]);
+    loadMaterials();
+  }, [getSession, navigate]);
 
   const currentMaterial = materials[currentIndex];
 
@@ -50,8 +47,16 @@ const Evaluation = () => {
     { state: "not_functional" as MaterialState, emoji: "🔴", label: "No sirve" },
   ];
 
-  if (isLoading || !currentMaterial) {
-    return <OnboardingSkeleton currentStep={4} totalSteps={6} backTo="/materials" />;
+  if (!currentMaterial) {
+    // Muestra un estado de carga o esqueleto mientras se cargan los materiales
+    return (
+        <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12">
+            <OnboardingProgress currentStep={4} totalSteps={6} backTo="/materials" />
+            <div className="w-full max-w-md flex flex-1 flex-col items-center justify-center">
+                <p>Cargando materiales...</p>
+            </div>
+        </div>
+    );
   }
 
   return (
@@ -82,11 +87,6 @@ const Evaluation = () => {
               <span className="font-semibold">{option.label}</span>
             </Button>
           ))}
-          {currentMaterial.state === "not_functional" && (
-            <div className="p-4 bg-sky/10 rounded-2xl text-center text-sm text-sky-700">
-              💡 Puedes reemplazarlo con algo similar.
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>

@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MaterialIcon from "@/components/MaterialIcon";
 import { Material } from "@/types/onboarding";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import OnboardingProgress from "@/components/OnboardingProgress";
-import OnboardingSkeleton from "@/components/OnboardingSkeleton";
+import { useSession } from "@/hooks/SessionContext";
 
 const availableMaterials: Material[] = [
   { id: "cardboard", name: "Cartones", emoji: "📦" },
@@ -23,7 +22,7 @@ const availableMaterials: Material[] = [
 const Materials = () => {
   const navigate = useNavigate();
   const [selectedMaterials, setSelectedMaterials] = useState<Set<string>>(new Set());
-  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const { updateSession, getSession } = useSession();
 
   useEffect(() => {
     const loadSavedMaterials = async () => {
@@ -33,10 +32,8 @@ const Materials = () => {
         setSelectedMaterials(new Set(savedIds));
       }
     };
-    if (!isLoading && sessionId) {
-      loadSavedMaterials();
-    }
-  }, [isLoading, sessionId, getSession]);
+    loadSavedMaterials();
+  }, [getSession]);
 
   const toggleMaterial = (materialId: string) => {
     setSelectedMaterials(prev => {
@@ -55,10 +52,6 @@ const Materials = () => {
     await updateSession({ materials });
     navigate("/evaluation", { replace: true });
   };
-
-  if (isLoading) {
-    return <OnboardingSkeleton currentStep={3} totalSteps={6} backTo="/child" />;
-  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12 animate-fade-in">

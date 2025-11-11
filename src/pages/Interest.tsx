@@ -4,9 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Interest as InterestType } from "@/types/onboarding";
 import { cn } from "@/lib/utils";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
 import OnboardingProgress from "@/components/OnboardingProgress";
-import OnboardingSkeleton from "@/components/OnboardingSkeleton";
+import { useSession } from "@/hooks/SessionContext";
 
 const interests = [
   { id: "art_coloring" as InterestType, emoji: "🎨", label: "Arte", color: "coral" },
@@ -19,7 +18,7 @@ const interests = [
 const Interest = () => {
   const navigate = useNavigate();
   const [selectedInterest, setSelectedInterest] = useState<InterestType | null>(null);
-  const { sessionId, isLoading, updateSession, getSession } = useOnboardingSession();
+  const { updateSession, getSession } = useSession();
 
   useEffect(() => {
     const loadSavedInterest = async () => {
@@ -28,10 +27,8 @@ const Interest = () => {
         setSelectedInterest(session.interest as InterestType);
       }
     };
-    if (!isLoading && sessionId) {
-      loadSavedInterest();
-    }
-  }, [isLoading, sessionId, getSession]);
+    loadSavedInterest();
+  }, [getSession]);
 
   const handleContinue = async () => {
     if (selectedInterest) {
@@ -45,10 +42,6 @@ const Interest = () => {
     coral: "bg-coral/20 border-coral hover:bg-coral/30",
     sky: "bg-sky/20 border-sky hover:bg-sky/30",
   };
-
-  if (isLoading) {
-    return <OnboardingSkeleton currentStep={6} totalSteps={6} backTo="/space" />;
-  }
 
   return (
     <div className="flex h-screen w-full flex-col items-center justify-start gap-4 bg-background p-4 pt-8 md:pt-12 animate-fade-in">

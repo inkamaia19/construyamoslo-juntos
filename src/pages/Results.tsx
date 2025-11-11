@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
-import { useOnboardingSession } from "@/hooks/useOnboardingSession";
+import { useSession } from "@/hooks/SessionContext";
 import { ArrowLeft } from "lucide-react";
 
 interface Activity {
@@ -16,21 +16,23 @@ const Results = () => {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [childName, setChildName] = useState("");
-  const { sessionId, sessionSecret, isLoading, getSession } = useOnboardingSession();
+  const { sessionId, sessionSecret, getSession } = useSession();
 
   useEffect(() => {
     const loadResults = async () => {
+      if (!sessionId || !sessionSecret) {
+        setLoading(false);
+        return;
+      }
+
       const session = await getSession();
       if (!session?.completed) {
-        navigate("/");
+        // Si el onboarding no está completo, redirigir al inicio.
+        navigate("/", { replace: true });
         return;
       }
       setChildName(session.child_name || "");
 
-      if (!sessionId || !sessionSecret) { 
-        setLoading(false); 
-        return; 
-      }
       try {
         const resp = await apiFetch(`/api/recommendations/${sessionId}`, {
           headers: { "x-session-secret": sessionSecret },
@@ -46,14 +48,12 @@ const Results = () => {
       }
     };
 
-    if (!isLoading && sessionId) {
-      loadResults();
-    }
-  }, [isLoading, sessionId, sessionSecret, navigate, getSession]);
+    loadResults();
+  }, [sessionId, sessionSecret, navigate, getSession]);
 
   const handleRestart = () => {
     localStorage.clear();
-    navigate("/", { replace: true });
+    window.location.href = "/"; // Forzar un reseteo completo
   };
 
   const handleScheduleCall = () => {
@@ -83,7 +83,7 @@ const Results = () => {
             ))
           ) : (
             activities.map(activity => (
-              <div 
+              <div
                 key={activity.id}
                 onClick={() => navigate(`/activity/${activity.id}`)}
                 className="relative aspect-[3/4] rounded-3xl overflow-hidden cursor-pointer group bg-muted"
