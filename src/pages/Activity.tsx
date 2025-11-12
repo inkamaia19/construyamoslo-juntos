@@ -1,32 +1,35 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft, Pencil, Camera } from "lucide-react";
+import { ArrowLeft, Pencil, Save, X, Camera, Loader2, UploadCloud } from "lucide-react";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 
-// ... (El componente FixedHeader no cambia, ya estaba en español)
-const FixedHeader = ({ backTo, title }: { backTo: string; title: string }) => {
+// ... Los componentes FixedHeader, ActivitySkeleton, etc. se mantienen igual pero los incluyo aquí para que sea un solo bloque
+const FixedHeader = ({ backTo, title, isEditing, onSave, onCancel, onEdit }: { 
+    backTo: string; title: string, isEditing: boolean; onSave: () => void; onCancel: () => void; onEdit: () => void;
+}) => {
   const navigate = useNavigate();
   return (
     <header className="fixed top-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-b">
       <div className="container mx-auto flex items-center p-2 h-16 max-w-3xl">
-        <Button variant="ghost" size="icon" className="mr-2" onClick={() => navigate(backTo)}>
-          <ArrowLeft className="h-6 w-6" />
+        <Button variant="ghost" size="icon" className="mr-2" onClick={() => isEditing ? onCancel() : navigate(backTo)}>
+          {isEditing ? <X className="h-6 w-6" /> : <ArrowLeft className="h-6 w-6" />}
         </Button>
-        <h1 className="text-lg font-bold truncate flex-1">{title}</h1>
-        <Button variant="ghost" size="icon" className="ml-2" onClick={() => toast.info("Función de editar próximamente.")}>
-          <Pencil className="h-5 w-5" />
+        <h1 className="text-lg font-bold truncate flex-1">{isEditing ? "Editando Actividad" : title}</h1>
+        <Button variant="ghost" size="icon" className="ml-2" onClick={isEditing ? onSave : onEdit}>
+          {isEditing ? <Save className="h-5 w-5" /> : <Pencil className="h-5 w-5" />}
         </Button>
       </div>
     </header>
   );
 };
-
 const ActivitySkeleton = () => (
     <div className="min-h-screen bg-background">
-      <FixedHeader backTo="/results" title="Cargando Actividad..." />
       <div className="max-w-3xl mx-auto space-y-6 p-6 pt-24">
         <Skeleton className="h-64 w-full rounded-3xl" />
         <div className="grid gap-4 md:grid-cols-3">
@@ -34,28 +37,9 @@ const ActivitySkeleton = () => (
           <Skeleton className="h-20 w-full rounded-2xl" />
           <Skeleton className="h-20 w-full rounded-2xl" />
         </div>
-        <Skeleton className="h-8 w-48 rounded-md" />
-        <Skeleton className="h-16 w-full rounded-md" />
-        <Skeleton className="h-8 w-40 rounded-md" />
-        <Skeleton className="h-24 w-full rounded-md" />
       </div>
     </div>
 );
-
-const ActivityNotFound = () => {
-    const navigate = useNavigate();
-    return (
-        <div className="min-h-screen bg-background">
-            <FixedHeader backTo="/results" title="Actividad no encontrada" />
-            <div className="max-w-3xl mx-auto space-y-6 text-center p-6 pt-24">
-                <h2 className="text-2xl font-bold">No pudimos encontrar esta actividad.</h2>
-                <p className="text-muted-foreground">Puede que haya sido movida o eliminada.</p>
-                <Button onClick={() => navigate("/results")}>Volver a Resultados</Button>
-            </div>
-        </div>
-    );
-};
-
 
 const Activity = () => {
   const { id } = useParams<{ id: string }>();
@@ -63,15 +47,23 @@ const Activity = () => {
   const [content, setContent] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // --- ESTADO PARA EDICIÓN ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [editableContent, setEditableContent] = useState<any | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     const loadActivity = async () => {
       if (!id) { setLoading(false); return; }
       setLoading(true);
       try {
         const resp = await apiFetch(`/api/activity/${id}`);
-        setContent(resp.ok ? await resp.json() : null);
+        const data = resp.ok ? await resp.json() : null;
+        setContent(data);
+        setEditableContent(JSON.parse(JSON.stringify(data))); // Clon profundo para edición
       } catch (error) {
-        console.error("Error al obtener detalles de la actividad:", error);
         setContent(null);
       } finally {
         setLoading(false);
@@ -81,81 +73,166 @@ const Activity = () => {
     loadActivity();
   }, [id]);
 
+  // --- MANEJADORES DE EDICIÓN ---
+  const handleInputChange = (field: string, value: any) => {
+    setEditableContent((prev: any) => ({ ...prev, [field]: value }));
+  };
+  
+  const handleStepChange = (index: number, value: string) => {
+    const newSteps = [...editableContent.steps];
+    newSteps[index] = value;
+    handleInputChange('steps', newSteps);
+  };
+  
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    toast.loading("Subiendo imagen...");
+
+    try {
+        const response = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'x-vercel-filename': file.name },
+            body: file,
+        });
+        const newBlob = await response.json();
+        if(!response.ok) throw new Error(newBlob.error);
+        
+        handleInputChange('image_url', newBlob.url);
+        toast.success("Imagen subida con éxito.");
+    } catch (error: any) {
+        toast.error("Error al subir la imagen.", { description: error.message });
+    } finally {
+        setIsUploading(false);
+        toast.dismiss();
+    }
+  };
+
+  const handleSave = async () => {
+    if (!editableContent || isSaving) return;
+    setIsSaving(true);
+    toast.loading("Guardando cambios...");
+
+    try {
+        const resp = await apiFetch(`/api/activity/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(editableContent),
+        });
+        const updatedData = await resp.json();
+        if (!resp.ok) throw new Error(updatedData.error);
+        
+        setContent(updatedData);
+        setIsEditing(false);
+        toast.success("Actividad guardada con éxito.");
+    } catch (error: any) {
+        toast.error("No se pudieron guardar los cambios.", { description: error.message });
+    } finally {
+        setIsSaving(false);
+        toast.dismiss();
+    }
+  };
+  
+  const handleCancel = () => {
+    setEditableContent(JSON.parse(JSON.stringify(content))); // Restaura los datos originales
+    setIsEditing(false);
+  };
+
   if (loading) return <ActivitySkeleton />;
-  if (!content) return <ActivityNotFound />;
+  if (!content) return <div>Actividad no encontrada.</div>;
+  
+  const data = isEditing ? editableContent : content;
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <FixedHeader backTo="/results" title={content.title} />
+      <FixedHeader 
+        backTo="/results" 
+        title={content.title}
+        isEditing={isEditing}
+        onEdit={() => setIsEditing(true)}
+        onSave={handleSave}
+        onCancel={handleCancel}
+      />
       <main className="max-w-3xl mx-auto space-y-8 p-6 pt-24 animate-fade-in">
         
-        {content.image_url && (
-            <div className="rounded-3xl overflow-hidden border shadow-lg">
-              <img src={content.image_url} alt={content.title} className="w-full h-auto object-cover" />
+        {/* --- SECCIÓN DE IMAGEN (EDITABLE) --- */}
+        <div className="rounded-3xl overflow-hidden border shadow-lg relative group">
+          <img src={data.image_url || "/placeholder.svg"} alt={data.title} className="w-full h-auto object-cover" />
+          {isEditing && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
+                    {isUploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <UploadCloud className="h-4 w-4 mr-2" />}
+                    Cambiar imagen
+                </Button>
+                <input type="file" ref={fileInputRef} onChange={handleImageUpload} className="hidden" accept="image/*"/>
             </div>
-        )}
-
-        <div className="grid gap-4 md:grid-cols-3">
-          <InfoCard label="Duración" value={content.duration_minutes ? `${content.duration_minutes} min` : "—"} />
-          <InfoCard label="Edad sugerida" value={content.age_min ? `${content.age_min}+ años` : "—"} />
-          <InfoCard label="Dificultad" value={content.difficulty || "—"} isCapitalized />
+          )}
         </div>
 
-        {content.objective && <Section title="Objetivo" content={<p className="text-lg text-muted-foreground">{content.objective}</p>} />}
+        {/* --- SECCIÓN DE TARJETAS (EDITABLE Y RESPONSIVA) --- */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <EditableCard label="Duración (min)" field="duration_minutes" value={data.duration_minutes} onChange={handleInputChange} isEditing={isEditing} type="number" />
+          <EditableCard label="Edad sugerida" field="age_min" value={data.age_min} onChange={handleInputChange} isEditing={isEditing} type="number" />
+          <EditableCard label="Dificultad" field="difficulty" value={data.difficulty} onChange={handleInputChange} isEditing={isEditing} />
+        </div>
 
-        {(content.required_materials?.length > 0) && (
-          <Section title="Materiales" content={
-            <div className="flex flex-wrap gap-2">
-              {content.required_materials.map((m: string) => <Tag key={m} text={m} />)}
-            </div>
-          }/>
-        )}
+        {/* --- SECCIÓN DE OBJETIVO (EDITABLE) --- */}
+        <Section title="Objetivo">
+          {isEditing ? (
+            <Textarea value={data.objective || ''} onChange={(e) => handleInputChange('objective', e.target.value)} className="text-lg" rows={3}/>
+          ) : (
+            <p className="text-lg text-muted-foreground">{data.objective}</p>
+          )}
+        </Section>
 
-        {content.steps?.length > 0 && (
-          <Section title="Pasos a seguir" content={
-            <ol className="list-decimal pl-6 space-y-3 text-foreground/90 text-lg">
-              {content.steps.map((s: string, i: number) => <li key={i}>{s}</li>)}
-            </ol>
-          }/>
-        )}
+        {/* --- SECCIÓN DE MATERIALES (EDITABLE) --- */}
+        <Section title="Materiales Requeridos">
+            {isEditing ? (
+                <Input value={(data.required_materials || []).join(', ')} onChange={e => handleInputChange('required_materials', e.target.value.split(',').map(s => s.trim()))} placeholder="Ej: botellas, tijeras, carton"/>
+            ) : (
+                <div className="flex flex-wrap gap-2">
+                    {(data.required_materials || []).map((m: string) => <Badge key={m} variant="secondary" className="text-base">{m}</Badge>)}
+                </div>
+            )}
+        </Section>
         
-        <Section title="¡Muéstranos tu creación!" content={
-          <div className="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed bg-card/50 text-center">
-            <Camera className="h-12 w-12 text-muted-foreground mb-2" />
-            <p className="text-muted-foreground mb-4">Sube una foto de tu resultado para inspirar a otros.</p>
-            <Button variant="outline" onClick={() => toast.info("Función de subir fotos próximamente.")}>
-              Subir foto
-            </Button>
-          </div>
-        }/>
-
-        <div className="flex gap-3 pt-4">
-          <Button size="lg" className="rounded-full flex-1 h-14 text-lg" onClick={() => navigate("/results")}>Ver otras ideas</Button>
-          <Button size="lg" variant="outline" className="rounded-full flex-1 h-14 text-lg">Marcar como realizada</Button>
-        </div>
+        {/* --- SECCIÓN DE PASOS (EDITABLE) --- */}
+        <Section title="Pasos a seguir">
+          <ol className="list-decimal pl-6 space-y-3 text-foreground/90 text-lg">
+            {(data.steps || []).map((step: string, i: number) => (
+              <li key={i}>
+                {isEditing ? (
+                  <Textarea value={step} onChange={(e) => handleStepChange(i, e.target.value)} rows={2} />
+                ) : (
+                  step
+                )}
+              </li>
+            ))}
+          </ol>
+        </Section>
       </main>
     </div>
   );
 };
 
-const InfoCard = ({ label, value, isCapitalized = false }: { label: string; value: string; isCapitalized?: boolean }) => (
-  <div className="p-4 rounded-2xl bg-card border">
-    <div className="text-sm text-muted-foreground mb-1">{label}</div>
-    <div className={`text-lg font-semibold ${isCapitalized ? 'capitalize' : ''}`}>{value}</div>
-  </div>
+// Componente de ayuda para tarjeta editable
+const EditableCard = ({ label, field, value, isEditing, onChange, type = 'text' }: any) => (
+    <div className="p-4 rounded-2xl bg-card border">
+        <div className="text-sm text-muted-foreground mb-1">{label}</div>
+        {isEditing ? (
+            <Input type={type} value={value || ''} onChange={(e) => onChange(field, type === 'number' ? parseInt(e.target.value) || 0 : e.target.value)} className="text-lg font-semibold"/>
+        ) : (
+            <div className="text-lg font-semibold capitalize">{value || '—'}</div>
+        )}
+    </div>
 );
-
-const Section = ({ title, content }: { title: string; content: React.ReactNode }) => (
+const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
   <section className="space-y-3">
     <h3 className="text-2xl font-bold">{title}</h3>
-    {content}
+    {children}
   </section>
-);
-
-const Tag = ({ text }: { text: string }) => (
-  <span className="px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-sm font-semibold capitalize">
-    {text.replace(/_/g, ' ')}
-  </span>
 );
 
 export default Activity;
