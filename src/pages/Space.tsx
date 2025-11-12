@@ -3,40 +3,58 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MaterialIcon from "@/components/MaterialIcon";
-import { Environment } from "@/types/onboarding";
+import type { Environment } from "@/types/onboarding";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const spaces = [
-  { id: "garden" as Environment, emoji: "🌳", label: "Jardín" },
-  { id: "living_room" as Environment, emoji: "🛋️", label: "Sala" },
-  { id: "table" as Environment, emoji: "🪑", label: "Mesa" },
-  { id: "floor" as Environment, emoji: "🧺", label: "Piso" },
-  { id: "other" as Environment, emoji: "🧱", label: "Otro" },
-];
+interface SpaceOption { id: Environment; emoji: string; label: string; }
+
+const SpaceSkeleton = () => (
+    <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
+        {Array.from({ length: 5 }).map((_, i) => (
+            <Skeleton key={i} className="h-36 w-full rounded-3xl" />
+        ))}
+    </div>
+);
 
 const Space = () => {
   const navigate = useNavigate();
   const [selectedSpace, setSelectedSpace] = useState<Environment | null>(null);
   const { updateSession, getSession } = useSession();
   const [isSaving, setIsSaving] = useState(false);
+  const [availableSpaces, setAvailableSpaces] = useState<SpaceOption[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadSavedSpace = async () => {
-      const session = await getSession();
-      if (session?.environment) {
-        setSelectedSpace(session.environment as Environment);
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [spaceResponse, session] = await Promise.all([
+            apiFetch('/api/spaces'),
+            getSession()
+        ]);
+        if (!spaceResponse.ok) throw new Error("No se pudieron cargar los espacios.");
+        const spaceData = await spaceResponse.json();
+        setAvailableSpaces(spaceData.spaces || []);
+        if (session?.environment) setSelectedSpace(session.environment as Environment);
+      } catch (e) {
+        setError("Error al cargar los espacios.");
+      } finally {
+        setIsLoading(false);
       }
     };
-    loadSavedSpace();
+    loadData();
   }, [getSession]);
 
   const handleContinue = () => {
     if (!selectedSpace || isSaving) return;
     setIsSaving(true);
     navigate("/interest", { replace: true });
-    
     updateSession({ environment: selectedSpace }).finally(() => setIsSaving(false));
   };
 
@@ -48,28 +66,19 @@ const Space = () => {
           <CardTitle className="text-3xl font-bold">¿Dónde jugarán?</CardTitle>
           <CardDescription>Selecciona el espacio principal.</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex items-center">
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
-            {spaces.map((space, index) => (
-              <MaterialIcon
-                key={space.id}
-                emoji={space.emoji}
-                label={space.label}
-                isSelected={selectedSpace === space.id}
-                onClick={() => setSelectedSpace(space.id)}
-                color={["mint", "coral", "sky", "cream"][index % 4] as any}
-              />
-            ))}
-          </div>
+        <CardContent className="flex-1 flex items-center justify-center">
+          {isLoading ? <SpaceSkeleton /> : error ? (
+            <div className="text-center text-destructive"><AlertTriangle className="mx-auto h-12 w-12 mb-2" /><p>{error}</p></div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
+                {availableSpaces.map((space, index) => (
+                    <MaterialIcon key={space.id} emoji={space.emoji} label={space.label} isSelected={selectedSpace === space.id} onClick={() => setSelectedSpace(space.id)} color={["mint", "coral", "sky", "cream"][index % 4] as any} />
+                ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter>
-          <Button
-            disabled={!selectedSpace || isSaving}
-            size="lg"
-            className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
-            style={{ backgroundColor: "#FF8A6C" }}
-            onClick={handleContinue}
-          >
+          <Button disabled={!selectedSpace || isSaving || isLoading} size="lg" className="w-full h-14 text-xl rounded-full bg-secondary text-foreground" style={{ backgroundColor: "#FF8A6C" }} onClick={handleContinue}>
             {isSaving ? <Loader2 className="h-6 w-6 animate-spin" /> : "Siguiente"}
           </Button>
         </CardFooter>

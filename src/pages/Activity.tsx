@@ -3,9 +3,10 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiFetch } from "@/lib/api";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil, Camera } from "lucide-react";
+import { toast } from "sonner";
 
-// Componente de Cabecera Fija para mantener la consistencia
+// ... (El componente FixedHeader no cambia, ya estaba en español)
 const FixedHeader = ({ backTo, title }: { backTo: string; title: string }) => {
   const navigate = useNavigate();
   return (
@@ -14,32 +15,33 @@ const FixedHeader = ({ backTo, title }: { backTo: string; title: string }) => {
         <Button variant="ghost" size="icon" className="mr-2" onClick={() => navigate(backTo)}>
           <ArrowLeft className="h-6 w-6" />
         </Button>
-        <h1 className="text-lg font-bold truncate flex-1 pr-10 text-center">{title}</h1>
+        <h1 className="text-lg font-bold truncate flex-1">{title}</h1>
+        <Button variant="ghost" size="icon" className="ml-2" onClick={() => toast.info("Función de editar próximamente.")}>
+          <Pencil className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );
 };
 
-// Esqueleto de Carga para una mejor UX
 const ActivitySkeleton = () => (
-  <div className="min-h-screen bg-background">
-    <FixedHeader backTo="/results" title="Cargando Actividad..." />
-    <div className="max-w-3xl mx-auto space-y-6 p-6 pt-24">
-      <Skeleton className="h-64 w-full rounded-3xl" />
-      <div className="grid gap-4 md:grid-cols-3">
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-20 w-full rounded-2xl" />
-        <Skeleton className="h-20 w-full rounded-2xl" />
+    <div className="min-h-screen bg-background">
+      <FixedHeader backTo="/results" title="Cargando Actividad..." />
+      <div className="max-w-3xl mx-auto space-y-6 p-6 pt-24">
+        <Skeleton className="h-64 w-full rounded-3xl" />
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-2xl" />
+        </div>
+        <Skeleton className="h-8 w-48 rounded-md" />
+        <Skeleton className="h-16 w-full rounded-md" />
+        <Skeleton className="h-8 w-40 rounded-md" />
+        <Skeleton className="h-24 w-full rounded-md" />
       </div>
-      <Skeleton className="h-8 w-48 rounded-md" />
-      <Skeleton className="h-16 w-full rounded-md" />
-      <Skeleton className="h-8 w-40 rounded-md" />
-      <Skeleton className="h-24 w-full rounded-md" />
     </div>
-  </div>
 );
 
-// Vista para cuando la actividad no se encuentra
 const ActivityNotFound = () => {
     const navigate = useNavigate();
     return (
@@ -54,7 +56,7 @@ const ActivityNotFound = () => {
     );
 };
 
-// Componente Principal de la Página
+
 const Activity = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -63,21 +65,13 @@ const Activity = () => {
 
   useEffect(() => {
     const loadActivity = async () => {
-      if (!id) {
-        setLoading(false);
-        return;
-      }
+      if (!id) { setLoading(false); return; }
       setLoading(true);
       try {
         const resp = await apiFetch(`/api/activity/${id}`);
-        if (resp.ok) {
-          const data = await resp.json();
-          setContent(data);
-        } else {
-          setContent(null);
-        }
+        setContent(resp.ok ? await resp.json() : null);
       } catch (error) {
-        console.error("Error fetching activity details:", error);
+        console.error("Error al obtener detalles de la actividad:", error);
         setContent(null);
       } finally {
         setLoading(false);
@@ -87,18 +81,13 @@ const Activity = () => {
     loadActivity();
   }, [id]);
 
-  if (loading) {
-    return <ActivitySkeleton />;
-  }
-
-  if (!content) {
-    return <ActivityNotFound />;
-  }
+  if (loading) return <ActivitySkeleton />;
+  if (!content) return <ActivityNotFound />;
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <FixedHeader backTo="/results" title={content.title} />
-      <div className="max-w-3xl mx-auto space-y-8 p-6 pt-24 animate-fade-in">
+      <main className="max-w-3xl mx-auto space-y-8 p-6 pt-24 animate-fade-in">
         
         {content.image_url && (
             <div className="rounded-3xl overflow-hidden border shadow-lg">
@@ -107,87 +96,66 @@ const Activity = () => {
         )}
 
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="p-4 rounded-2xl bg-card border">
-            <div className="text-sm text-muted-foreground mb-1">Duración</div>
-            <div className="text-lg font-semibold">{content.duration_minutes ? `${content.duration_minutes} min` : "—"}</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-card border">
-            <div className="text-sm text-muted-foreground mb-1">Edad sugerida</div>
-            <div className="text-lg font-semibold">{content.age_min ? `${content.age_min}+ años` : "—"}</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-card border">
-            <div className="text-sm text-muted-foreground mb-1">Dificultad</div>
-            <div className="text-lg font-semibold capitalize">{content.difficulty || "—"}</div>
-          </div>
+          <InfoCard label="Duración" value={content.duration_minutes ? `${content.duration_minutes} min` : "—"} />
+          <InfoCard label="Edad sugerida" value={content.age_min ? `${content.age_min}+ años` : "—"} />
+          <InfoCard label="Dificultad" value={content.difficulty || "—"} isCapitalized />
         </div>
 
-        {content.objective && (
-          <div className="space-y-2">
-            <h3 className="text-2xl font-bold">Objetivo</h3>
-            <p className="text-lg text-muted-foreground">{content.objective}</p>
-          </div>
+        {content.objective && <Section title="Objetivo" content={<p className="text-lg text-muted-foreground">{content.objective}</p>} />}
+
+        {(content.required_materials?.length > 0) && (
+          <Section title="Materiales" content={
+            <div className="flex flex-wrap gap-2">
+              {content.required_materials.map((m: string) => <Tag key={m} text={m} />)}
+            </div>
+          }/>
         )}
 
-        <div className="space-y-3">
-          <h3 className="text-2xl font-bold">Materiales</h3>
-          <div className="flex flex-wrap gap-2">
-            {(content.required_materials || []).map((m: string) => (
-              <span key={m} className="px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-sm font-semibold capitalize">
-                {m.replace(/_/g, ' ')}
-              </span>
-            ))}
-            {(content.optional_materials || []).map((m: string) => (
-              <span key={m} className="px-3 py-1 rounded-full bg-muted/60 border text-sm capitalize">
-                Opcional: {m.replace(/_/g, ' ')}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {content.steps && content.steps.length > 0 && (
-          <div className="space-y-3">
-            <h3 className="text-2xl font-bold">Pasos a seguir</h3>
+        {content.steps?.length > 0 && (
+          <Section title="Pasos a seguir" content={
             <ol className="list-decimal pl-6 space-y-3 text-foreground/90 text-lg">
-              {(content.steps).map((s: string, i: number) => (
-                <li key={i}>{s}</li>
-              ))}
+              {content.steps.map((s: string, i: number) => <li key={i}>{s}</li>)}
             </ol>
-          </div>
+          }/>
         )}
-
-        {content.tips && content.tips.length > 0 && (
-          <div className="space-y-2 p-4 bg-card rounded-2xl border">
-            <h3 className="text-xl font-bold">💡 Sugerencias</h3>
-            <ul className="list-disc pl-6 text-muted-foreground space-y-1">
-              {content.tips.map((s: string, i: number) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
+        
+        <Section title="¡Muéstranos tu creación!" content={
+          <div className="flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed bg-card/50 text-center">
+            <Camera className="h-12 w-12 text-muted-foreground mb-2" />
+            <p className="text-muted-foreground mb-4">Sube una foto de tu resultado para inspirar a otros.</p>
+            <Button variant="outline" onClick={() => toast.info("Función de subir fotos próximamente.")}>
+              Subir foto
+            </Button>
           </div>
-        )}
-
-        {content.safety && content.safety.length > 0 && (
-          <div className="space-y-2 p-4 bg-red-50 text-red-900 rounded-2xl border border-red-200">
-            <h3 className="text-xl font-bold">⚠️ Seguridad</h3>
-            <ul className="list-disc pl-6 space-y-1">
-              {content.safety.map((s: string, i: number) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        }/>
 
         <div className="flex gap-3 pt-4">
-          <Button size="lg" className="rounded-full flex-1 h-14 text-lg" onClick={() => navigate("/results")}>
-            Ver otras ideas
-          </Button>
-          <Button size="lg" variant="outline" className="rounded-full flex-1 h-14 text-lg">
-            Marcar como realizada
-          </Button>
+          <Button size="lg" className="rounded-full flex-1 h-14 text-lg" onClick={() => navigate("/results")}>Ver otras ideas</Button>
+          <Button size="lg" variant="outline" className="rounded-full flex-1 h-14 text-lg">Marcar como realizada</Button>
         </div>
-      </div>
+      </main>
     </div>
   );
 };
+
+const InfoCard = ({ label, value, isCapitalized = false }: { label: string; value: string; isCapitalized?: boolean }) => (
+  <div className="p-4 rounded-2xl bg-card border">
+    <div className="text-sm text-muted-foreground mb-1">{label}</div>
+    <div className={`text-lg font-semibold ${isCapitalized ? 'capitalize' : ''}`}>{value}</div>
+  </div>
+);
+
+const Section = ({ title, content }: { title: string; content: React.ReactNode }) => (
+  <section className="space-y-3">
+    <h3 className="text-2xl font-bold">{title}</h3>
+    {content}
+  </section>
+);
+
+const Tag = ({ text }: { text: string }) => (
+  <span className="px-3 py-1 rounded-full bg-primary/20 border border-primary/30 text-sm font-semibold capitalize">
+    {text.replace(/_/g, ' ')}
+  </span>
+);
 
 export default Activity;

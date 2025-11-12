@@ -3,22 +3,24 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import MaterialIcon from "@/components/MaterialIcon";
-import { Material } from "@/types/onboarding";
+import type { Material } from "@/types/onboarding";
 import OnboardingProgress from "@/components/OnboardingProgress";
 import { useSession } from "@/hooks/SessionContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
+import { apiFetch } from "@/lib/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
-const availableMaterials: Omit<Material, 'state'>[] = [
-  { id: "cardboard", name: "Cartones", emoji: "📦" },
-  { id: "bottles", name: "Botellas", emoji: "🧃" },
-  { id: "scissors", name: "Tijeras", emoji: "✂️" },
-  { id: "paint", name: "Pinturas", emoji: "🎨" },
-  { id: "plants", name: "Plantas", emoji: "🌿" },
-  { id: "toys", name: "Juguetes", emoji: "🧩" },
-  { id: "sticks", name: "Palitos", emoji: "🪵" },
-  { id: "fabrics", name: "Telas", emoji: "🧺" },
-  { id: "flashlight", name: "Linternas", emoji: "🔦" },
-];
+// El esqueleto para una mejor experiencia de carga
+const MaterialsSkeleton = () => (
+  <div className="grid grid-cols-3 gap-3 md:gap-4 w-full">
+    {Array.from({ length: 9 }).map((_, i) => (
+      <div key={i} className="flex flex-col items-center gap-2">
+        <Skeleton className="h-28 w-28 rounded-3xl" />
+        <Skeleton className="h-4 w-16 rounded-md" />
+      </div>
+    ))}
+  </div>
+);
 
 const Materials = () => {
   const navigate = useNavigate();
@@ -27,16 +29,40 @@ const Materials = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [initialMaterials, setInitialMaterials] = useState<Material[]>([]);
 
+  const [availableMaterials, setAvailableMaterials] = useState<Omit<Material, 'state'>[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const loadSavedMaterials = async () => {
-      const session = await getSession();
-      if (session?.materials && Array.isArray(session.materials)) {
-        const savedIds = new Set(session.materials.map(m => m.id));
-        setSelectedMaterials(savedIds);
-        setInitialMaterials(session.materials); // Guardamos los materiales iniciales con su estado
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [materialsResponse, session] = await Promise.all([
+          apiFetch('/api/materials'),
+          getSession()
+        ]);
+
+        if (!materialsResponse.ok) {
+          throw new Error('No se pudieron cargar los materiales.');
+        }
+
+        const materialsData = await materialsResponse.json();
+        setAvailableMaterials(materialsData.materials || []);
+
+        if (session?.materials && Array.isArray(session.materials)) {
+          const savedIds = new Set(session.materials.map(m => m.id));
+          setSelectedMaterials(savedIds);
+          setInitialMaterials(session.materials);
+        }
+      } catch (e: any) {
+        setError('Hubo un problema al cargar. Intenta de nuevo.');
+        console.error("Error al cargar los datos de materiales:", e);
+      } finally {
+        setIsLoading(false);
       }
     };
-    loadSavedMaterials();
+    loadData();
   }, [getSession]);
 
   const toggleMaterial = (materialId: string) => {
@@ -58,23 +84,17 @@ const Materials = () => {
     if (!canContinue || isSaving) return;
     setIsSaving(true);
     
-    // Construimos la lista final de materiales para guardar
     const materialsToSave = availableMaterials
       .filter(m => selectedMaterials.has(m.id))
       .map(currentMaterial => {
-        // Buscamos si este material ya tenía un estado guardado
         const existingMaterial = initialMaterials.find(im => im.id === currentMaterial.id);
         return {
           ...currentMaterial,
-          // Si ya tenía un estado (ej. "functional"), lo preservamos. Si no, queda undefined.
           state: existingMaterial?.state, 
         };
       });
 
-    // Navegación optimista
     navigate("/evaluation", { replace: true });
-
-    // Guardado en segundo plano
     updateSession({ materials: materialsToSave }).finally(() => setIsSaving(false));
   };
 
@@ -86,23 +106,32 @@ const Materials = () => {
           <CardTitle className="text-3xl font-bold">¿Qué tienes en casa?</CardTitle>
           <CardDescription>Elige al menos 2. ¡No necesitas nada especial!</CardDescription>
         </CardHeader>
-        <CardContent className="flex-1 flex items-center">
-          <div className="grid grid-cols-3 gap-3 md:gap-4 w-full">
-            {availableMaterials.map((material) => (
-              <MaterialIcon
-                key={material.id}
-                emoji={material.emoji}
-                label={material.name}
-                isSelected={selectedMaterials.has(material.id)}
-                onClick={() => toggleMaterial(material.id)}
-                color="mint"
-              />
-            ))}
-          </div>
+        <CardContent className="flex-1 flex items-center justify-center">
+          {isLoading ? (
+            <MaterialsSkeleton />
+          ) : error ? (
+            <div className="text-center text-destructive">
+              <AlertTriangle className="mx-auto h-12 w-12 mb-2" />
+              <p>{error}</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-3 md:gap-4 w-full">
+              {availableMaterials.map((material) => (
+                <MaterialIcon
+                  key={material.id}
+                  emoji={material.emoji}
+                  label={material.name}
+                  isSelected={selectedMaterials.has(material.id)}
+                  onClick={() => toggleMaterial(material.id)}
+                  color="mint"
+                />
+              ))}
+            </div>
+          )}
         </CardContent>
         <CardFooter>
           <Button
-            disabled={!canContinue || isSaving}
+            disabled={!canContinue || isSaving || isLoading}
             size="lg"
             className="w-full h-14 text-xl rounded-full bg-secondary text-foreground"
             style={{ backgroundColor: "#FF8A6C" }}
