@@ -36,6 +36,8 @@ const Interest = () => {
     if (!selectedInterest || isSaving) return;
     setIsSaving(true);
     
+    // En el último paso, esperamos la confirmación antes de navegar a los resultados.
+    // El spinner en el botón proporciona la retroalimentación necesaria.
     updateSession({ interest: selectedInterest, completed: true }).then(() => {
       navigate("/results", { replace: true });
     }).finally(() => {
