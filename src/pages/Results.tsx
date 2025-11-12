@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { useSession } from "@/hooks/SessionContext";
-import { ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, RefreshCw, Loader2, ImageOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Activity {
@@ -13,9 +13,20 @@ interface Activity {
   base_activity_id: string;
   difficulty?: string;
   required_materials?: string[];
+  // Añadimos el interest_tag para el emoji de fallback
+  interest_tag?: 'art_coloring' | 'water_bubbles' | 'discover' | 'sounds_rhythm' | 'building';
 }
 
-// ... (Componente DifficultyBadge sin cambios)
+// Mapeo de emojis para el fallback
+const interestEmojis: Record<string, string> = {
+  art_coloring: "🎨",
+  water_bubbles: "💦",
+  discover: "🔬",
+  sounds_rhythm: "🎵",
+  building: "🧱",
+  default: "🧩"
+};
+
 const DifficultyBadge = ({ difficulty }: { difficulty?: string }) => {
   if (!difficulty) return null;
   const colors = {
@@ -34,6 +45,35 @@ const DifficultyBadge = ({ difficulty }: { difficulty?: string }) => {
   );
 };
 
+// Componente para manejar la carga de imágenes con fallback
+const ActivityImage = ({ src, title, interest }: { src?: string; title: string; interest?: string }) => {
+  const [hasError, setHasError] = useState(false);
+  const emoji = interest ? (interestEmojis[interest] || interestEmojis.default) : interestEmojis.default;
+
+  useEffect(() => {
+    setHasError(false); // Resetea el error cuando la fuente cambia
+  }, [src]);
+
+  if (!src || hasError) {
+    return (
+      <div className="w-full h-full bg-muted flex items-center justify-center">
+        <span className="text-5xl" role="img" aria-label={title}>{emoji}</span>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={src} 
+      alt={title} 
+      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" 
+      onError={() => {
+        console.error(`Error al cargar la imagen: ${src}`);
+        setHasError(true);
+      }}
+    />
+  );
+};
 
 const Results = () => {
   const navigate = useNavigate();
@@ -44,10 +84,7 @@ const Results = () => {
   const { sessionId, sessionSecret, getSession, recommendations, saveRecommendations, clearSession } = useSession();
 
   const loadResults = useCallback(async () => {
-    console.log("[FRONTEND LOG 1] Results.tsx: loadResults se ha llamado.");
-
     if (recommendations && recommendations.length > 0) {
-      console.log("[FRONTEND LOG 1.1] Usando recomendaciones cacheadas.");
       setActivities(recommendations);
       setLoading(false);
       return;
@@ -55,49 +92,37 @@ const Results = () => {
 
     setLoading(true);
     setError(null);
-    console.log(`[FRONTEND LOG 2] sessionId: ${sessionId}, sessionSecret: ${sessionSecret ? 'presente' : 'ausente'}`);
 
     if (!sessionId || !sessionSecret) {
       setError("No se ha encontrado una sesión válida. Por favor, empieza de nuevo.");
       setLoading(false);
-      console.error("[FRONTEND LOG 2.1] Faltan sessionId o sessionSecret.");
       return;
     }
 
     try {
-      console.log("[FRONTEND LOG 3] Obteniendo datos de la sesión (nombre del niño, estado completado)...");
       const session = await getSession();
       if (!session?.completed) {
-        console.warn("[FRONTEND LOG 3.1] La sesión no está marcada como completada. Redirigiendo a /");
         navigate("/", { replace: true });
         return;
       }
       setChildName(session.child_name || "");
-      console.log(`[FRONTEND LOG 4] Sesión válida. Nombre: ${session.child_name || "ninguno"}. Iniciando fetch a la API de recomendaciones.`);
-      
+
       const resp = await apiFetch(`/api/recommendations/${sessionId}`, {
         headers: { "x-session-secret": sessionSecret },
       });
 
-      console.log(`[FRONTEND LOG 5] Respuesta de la API recibida. Estado: ${resp.status}`);
-
       if (!resp.ok) {
-        const errorData = await resp.json().catch(() => ({ detail: "No se pudo leer el cuerpo del error." }));
-        console.error("[FRONTEND LOG 5.1] La respuesta del servidor no fue OK.", errorData);
-        throw new Error(`La respuesta del servidor no fue exitosa. Detalle: ${errorData.detail || resp.statusText}`);
+        throw new Error("La respuesta del servidor no fue exitosa.");
       }
 
       const data = await resp.json();
       const fetchedItems = data?.items || [];
-      console.log("[FRONTEND LOG 6] Datos JSON procesados con éxito. Items:", fetchedItems);
       setActivities(fetchedItems);
       saveRecommendations(fetchedItems);
-
-    } catch (err: any) {
-      console.error("[FRONTEND LOG ERROR] Error al cargar recomendaciones:", err);
-      setError(err.message || "No pudimos cargar las recomendaciones. Por favor, intenta de nuevo.");
+    } catch (err) {
+      console.error("Error al cargar recomendaciones:", err);
+      setError("No pudimos cargar las recomendaciones. Por favor, intenta de nuevo.");
     } finally {
-      console.log("[FRONTEND LOG 7] Proceso de carga finalizado (éxito o error).");
       setLoading(false);
     }
   }, [sessionId, sessionSecret, navigate, getSession, recommendations, saveRecommendations]);
@@ -113,7 +138,6 @@ const Results = () => {
     loadResults();
   }, [loadResults, getSession]);
 
-  // ... (resto del componente JSX sin cambios)
   const handleRestart = () => {
     clearSession();
     navigate("/");
@@ -165,9 +189,7 @@ const Results = () => {
             onClick={() => navigate(`/activity/${activity.base_activity_id}`)}
             className="relative aspect-square rounded-3xl overflow-hidden cursor-pointer group bg-muted shadow-md"
           >
-            {activity.image_url && (
-              <img src={activity.image_url} alt={activity.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-            )}
+            <ActivityImage src={activity.image_url} title={activity.title} interest={activity.interest_tag} />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-2 text-white">
               <h3 className="text-xs font-bold leading-tight">{activity.title}</h3>
               {activity.required_materials && activity.required_materials.length > 0 && (

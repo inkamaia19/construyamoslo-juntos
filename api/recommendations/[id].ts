@@ -26,7 +26,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Interest and environment must be selected." });
     }
 
-    // --- CONSULTA FINAL CON image_url ---
     const { rows: recommendations } = await pool.query(
       `
       (
@@ -36,7 +35,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             oa.image_url,
             oa.base_activity_id,
             a.difficulty,
-            a.required_materials
+            a.required_materials,
+            oa.interest_tag -- <--- AÑADIDO PARA EL EMOJI DE FALLBACK
         FROM public.onboarding_activities AS oa
         JOIN public.activities AS a ON oa.base_activity_id = a.id
         WHERE oa.interest_tag = $1 AND oa.environment_tag = $2
@@ -50,7 +50,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             oa.image_url,
             oa.base_activity_id,
             a.difficulty,
-            a.required_materials
+            a.required_materials,
+            oa.interest_tag -- <--- AÑADIDO PARA EL EMOJI DE FALLBACK
         FROM public.onboarding_activities AS oa
         JOIN public.activities AS a ON oa.base_activity_id = a.id
         WHERE oa.interest_tag = $1 OR oa.environment_tag = $2
