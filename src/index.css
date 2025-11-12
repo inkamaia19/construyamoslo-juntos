@@ -43,7 +43,8 @@
     animation: slide-up 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   }
   .animate-fade-in {
-    animation: fade-in 0.5s ease-in-out;
+    /* MODIFICACIÓN: Añadimos 'forwards' para que la animación no se revierta */
+    animation: fade-in 0.8s ease-in-out forwards;
   }
   .animate-zoom-in {
     animation: zoom-in 1.5s ease-out;

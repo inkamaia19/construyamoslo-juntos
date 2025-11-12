@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { Material, Environment, Interest } from "@/types/onboarding";
 import { apiFetch } from "@/lib/api";
 
-// Definimos explícitamente la forma de los datos de sesión para mayor claridad
 interface SessionData {
   id: string;
   session_secret: string;
@@ -20,20 +19,38 @@ interface SessionData {
   parent_phone?: string;
 }
 
+interface ActivityRecommendation {
+  id: string;
+  title: string;
+  image_url?: string;
+  base_activity_id: string;
+  difficulty?: string;
+  required_materials?: string[];
+}
+
 export const useOnboardingSession = () => {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [sessionSecret, setSessionSecret] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const INACTIVITY_MS = 15 * 60 * 1000; // 15 minutos de inactividad
+  const [recommendations, setRecommendations] = useState<ActivityRecommendation[] | null>(null);
+  const INACTIVITY_MS = 15 * 60 * 1000;
 
-  // Usamos sessionStorage para que los datos se borren al cerrar el navegador.
   const storage = window.sessionStorage;
 
   const touchSession = useCallback(() => {
     storage.setItem("onboarding_last_active_at", String(Date.now()));
   }, [storage]);
 
-  // Función para cargar una sesión existente desde sessionStorage. No crea una nueva.
+  const clearSession = useCallback(() => {
+    setSessionId(null);
+    setSessionSecret(null);
+    setRecommendations(null);
+    storage.removeItem("onboarding_session_id");
+    storage.removeItem("onboarding_session_secret");
+    storage.removeItem("onboarding_last_active_at");
+    storage.removeItem("onboarding_recommendations");
+  }, [storage]);
+
   const loadSessionFromStorage = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -41,9 +58,13 @@ export const useOnboardingSession = () => {
       const storedSecret = storage.getItem("onboarding_session_secret");
       const lastActive = Number(storage.getItem("onboarding_last_active_at") || 0);
       const isExpired = Date.now() - lastActive > INACTIVITY_MS;
+      
+      const storedRecs = storage.getItem("onboarding_recommendations");
+      if (storedRecs) {
+        setRecommendations(JSON.parse(storedRecs));
+      }
 
       if (storedSessionId && storedSecret && !isExpired) {
-        // Validamos que la sesión aún exista en el backend
         const resp = await apiFetch(`/api/session/${storedSessionId}`, {
           headers: { "x-session-secret": storedSecret },
         });
@@ -51,24 +72,22 @@ export const useOnboardingSession = () => {
           setSessionId(storedSessionId);
           setSessionSecret(storedSecret);
           touchSession();
-          return; // Sesión válida encontrada y cargada
+          return;
         }
       }
       
-      // Si no hay sesión válida, limpiamos el storage para evitar inconsistencias
-      storage.removeItem("onboarding_session_id");
-      storage.removeItem("onboarding_session_secret");
-      storage.removeItem("onboarding_last_active_at");
+      clearSession();
     } catch (error) {
       console.error("Error loading session from storage:", error);
+      clearSession();
     } finally {
       setIsLoading(false);
     }
-  }, [touchSession, storage]);
+  }, [touchSession, storage, clearSession]);
 
-  // Función para crear una nueva sesión explícitamente.
   const createSession = async (): Promise<SessionData | null> => {
     try {
+      clearSession();
       const resp = await apiFetch(`/api/session`, { method: "POST" });
       if (!resp.ok) throw new Error("Failed to create session on API");
       
@@ -85,7 +104,6 @@ export const useOnboardingSession = () => {
     }
   };
   
-  // Función para actualizar la sesión actual.
   const updateSession = async (updates: Partial<Omit<SessionData, 'id' | 'session_secret'>>) => {
     const currentId = sessionId || storage.getItem("onboarding_session_id");
     const currentSecret = sessionSecret || storage.getItem("onboarding_session_secret");
@@ -110,7 +128,6 @@ export const useOnboardingSession = () => {
     }
   };
 
-  // Función para obtener los datos completos de la sesión actual.
   const getSession = async (): Promise<SessionData | null> => {
     const currentId = sessionId || storage.getItem("onboarding_session_id");
     const currentSecret = sessionSecret || storage.getItem("onboarding_session_secret");
@@ -131,13 +148,21 @@ export const useOnboardingSession = () => {
     }
   };
 
+  const saveRecommendations = (recs: ActivityRecommendation[]) => {
+    setRecommendations(recs);
+    storage.setItem("onboarding_recommendations", JSON.stringify(recs));
+  }
+
   return {
     sessionId,
     sessionSecret,
     isLoading,
+    recommendations,
     loadSessionFromStorage,
     createSession,
     updateSession,
     getSession,
+    saveRecommendations,
+    clearSession,
   };
 };

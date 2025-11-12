@@ -25,13 +25,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { rows: recommendations } = await pool.query(
-      `SELECT id, title, image_url, base_activity_id
-       FROM public.onboarding_activities
-       WHERE interest_tag = $1 OR environment_tag = $2
-       ORDER BY
-         CASE WHEN interest_tag = $1 AND environment_tag = $2 THEN 0 ELSE 1 END,
-         random()
-       LIMIT 3`,
+      `
+      SELECT DISTINCT ON (oa.base_activity_id)
+          oa.id,
+          oa.title,
+          oa.image_url,
+          oa.base_activity_id,
+          a.difficulty,
+          a.required_materials
+      FROM public.onboarding_activities AS oa
+      JOIN public.activities AS a ON oa.base_activity_id = a.id
+      WHERE oa.interest_tag = $1 OR oa.environment_tag = $2
+      ORDER BY
+          oa.base_activity_id,
+          CASE
+              WHEN oa.interest_tag = $1 AND oa.environment_tag = $2 THEN 0
+              WHEN oa.interest_tag = $1 THEN 1
+              WHEN oa.environment_tag = $2 THEN 2
+              ELSE 3
+          END,
+          random()
+      LIMIT 5;
+      `,
       [interest, environment]
     );
 
