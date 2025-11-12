@@ -102,7 +102,7 @@ const Results = () => {
   };
 
   const handleScheduleCall = () => {
-    window.open("https://calendly.com/lordtom2019/30min", "_blank");
+    window.open("https://calendly.com/huamanshalem3/30min", "_blank");
   };
 
   if (loading) {
