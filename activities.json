@@ -1,0 +1,395 @@
+[
+    {
+        "id": "bottle-sounds",
+        "title": "Crea sonidos con botellas",
+        "difficulty": "fácil",
+        "required_materials": [
+            "bottles",
+            "sticks"
+        ],
+        "interests": [
+            "sounds_rhythm",
+            "discover"
+        ],
+        "environments": [
+            "living_room",
+            "garden"
+        ],
+        "optional_materials": [],
+        "objective": "Explorar ritmo y sonido con materiales cotidianos.",
+        "duration_minutes": 12,
+        "age_min": 3,
+        "age_max": null,
+        "steps": [
+            "Coloca las botellas vacías en fila.",
+            "Golpea suavemente con palitos.",
+            "Inventen una melodía variando ritmos."
+        ],
+        "tips": [
+            "Cambiar el nivel de agua cambia el tono."
+        ],
+        "safety": [
+            "Evita golpes fuertes que rompan plástico o vidrio."
+        ]
+    },
+    {
+        "id": "bridge-builder",
+        "title": "Puentes y caminos",
+        "difficulty": "avanzado",
+        "required_materials": [
+            "cardboard",
+            "sticks",
+            "scissors"
+        ],
+        "interests": [
+            "building",
+            "discover"
+        ],
+        "environments": [
+            "floor",
+            "table"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "bubble-music",
+        "title": "Música de burbujas en botellas",
+        "difficulty": "fácil",
+        "required_materials": [
+            "bottles",
+            "water"
+        ],
+        "interests": [
+            "water_bubbles",
+            "sounds_rhythm"
+        ],
+        "environments": [
+            "table",
+            "garden"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "cardboard-construction",
+        "title": "Construye con cartón",
+        "difficulty": "medio",
+        "required_materials": [
+            "cardboard",
+            "scissors"
+        ],
+        "interests": [
+            "building",
+            "art_coloring"
+        ],
+        "environments": [
+            "table",
+            "floor"
+        ],
+        "optional_materials": [],
+        "objective": "Desarrollar pensamiento espacial construyendo con formas de cartón.",
+        "duration_minutes": 25,
+        "age_min": 4,
+        "age_max": null,
+        "steps": [
+            "Recorta piezas con ayuda.",
+            "Ensambla torres encastrando ranuras.",
+            "Decora con pintura si quieres."
+        ],
+        "tips": [
+            "Usa cajas de cereales para piezas firmes."
+        ],
+        "safety": [
+            "Supervisa el uso de tijeras."
+        ]
+    },
+    {
+        "id": "color-mosaics",
+        "title": "Mosaicos de color con papel",
+        "difficulty": "fácil",
+        "required_materials": [
+            "paint"
+        ],
+        "interests": [
+            "art_coloring"
+        ],
+        "environments": [
+            "table"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "fabric-fort",
+        "title": "Fuerte con telas",
+        "difficulty": "fácil",
+        "required_materials": [
+            "fabrics"
+        ],
+        "interests": [
+            "building",
+            "discover"
+        ],
+        "environments": [
+            "living_room"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "light-lab",
+        "title": "Laboratorio de luces y sombras",
+        "difficulty": "medio",
+        "required_materials": [
+            "flashlight",
+            "fabrics"
+        ],
+        "interests": [
+            "discover",
+            "art_coloring"
+        ],
+        "environments": [
+            "living_room"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "nature-hunt",
+        "title": "Exploración de tesoros naturales",
+        "difficulty": "fácil",
+        "required_materials": [
+            "plants",
+            "sticks"
+        ],
+        "interests": [
+            "discover"
+        ],
+        "environments": [
+            "garden"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "shadow-paint",
+        "title": "Pinta sombras con linterna",
+        "difficulty": "medio",
+        "required_materials": [
+            "flashlight",
+            "paint"
+        ],
+        "interests": [
+            "art_coloring",
+            "discover"
+        ],
+        "environments": [
+            "table",
+            "living_room"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "stick-percussion",
+        "title": "Percusión con palitos y botellas",
+        "difficulty": "fácil",
+        "required_materials": [
+            "sticks",
+            "bottles"
+        ],
+        "interests": [
+            "sounds_rhythm"
+        ],
+        "environments": [
+            "living_room",
+            "garden"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "texture-orchestra",
+        "title": "Orquesta de texturas",
+        "difficulty": "medio",
+        "required_materials": [
+            "fabrics",
+            "cardboard"
+        ],
+        "interests": [
+            "sounds_rhythm",
+            "discover"
+        ],
+        "environments": [
+            "floor",
+            "living_room"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "tower-challenge",
+        "title": "Reto de torres con cartón",
+        "difficulty": "medio",
+        "required_materials": [
+            "cardboard"
+        ],
+        "interests": [
+            "building"
+        ],
+        "environments": [
+            "floor",
+            "table"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "toy-theatre",
+        "title": "Teatro con juguetes y cartón",
+        "difficulty": "medio",
+        "required_materials": [
+            "toys",
+            "cardboard",
+            "paint"
+        ],
+        "interests": [
+            "art_coloring",
+            "building"
+        ],
+        "environments": [
+            "table",
+            "living_room"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    },
+    {
+        "id": "water-colors",
+        "title": "Explora colores con agua",
+        "difficulty": "fácil",
+        "required_materials": [
+            "paint",
+            "bottles"
+        ],
+        "interests": [
+            "water_bubbles",
+            "art_coloring"
+        ],
+        "environments": [
+            "table",
+            "garden"
+        ],
+        "optional_materials": [],
+        "objective": "Explorar mezclas y transparencias jugando con agua y color.",
+        "duration_minutes": 15,
+        "age_min": 3,
+        "age_max": null,
+        "steps": [
+            "Llena 2–3 botellas con agua.",
+            "Agrega una gota de pintura a cada una y agita.",
+            "Observan cómo cambia el color al mezclar.",
+            "Trasvasen para crear nuevos tonos."
+        ],
+        "tips": [
+            "Usa una bandeja para contener derrames.",
+            "Si no hay pinturas, usa colorantes."
+        ],
+        "safety": [
+            "Supervisa el manejo de líquidos cerca de enchufes."
+        ]
+    },
+    {
+        "id": "water-paths",
+        "title": "Caminos de agua y color",
+        "difficulty": "medio",
+        "required_materials": [
+            "bottles",
+            "paint",
+            "sticks"
+        ],
+        "interests": [
+            "water_bubbles",
+            "art_coloring"
+        ],
+        "environments": [
+            "garden",
+            "table"
+        ],
+        "optional_materials": [],
+        "objective": null,
+        "duration_minutes": null,
+        "age_min": null,
+        "age_max": null,
+        "steps": [],
+        "tips": [],
+        "safety": []
+    }
+]

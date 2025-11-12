@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"; // <-- Importamos useRef
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +13,6 @@ const Evaluation = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const { updateSession, getSession } = useSession();
-
-  // Creamos una referencia que contendrá los elementos de los botones
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
@@ -23,7 +21,6 @@ const Evaluation = () => {
       if (session?.materials && Array.isArray(session.materials) && session.materials.length > 0) {
         setMaterials(session.materials as unknown as Material[]);
       } else {
-        // Si no hay materiales, volvemos al paso anterior para evitar errores.
         navigate("/materials", { replace: true });
       }
     };
@@ -35,7 +32,6 @@ const Evaluation = () => {
   const handleStateSelect = (state: MaterialState, buttonIndex: number) => {
     if (isTransitioning) return;
 
-    // Quitamos el foco del botón presionado inmediatamente
     buttonRefs.current[buttonIndex]?.blur();
 
     const updatedMaterials = [...materials];
@@ -93,14 +89,13 @@ const Evaluation = () => {
             {stateOptions.map((option, index) => (
               <Button
                 key={option.state}
-                ref={el => buttonRefs.current[index] = el} // Asignamos la referencia al botón
-                // Usamos onPointerDown para una respuesta más inmediata en táctil
-                onPointerDown={() => handleStateSelect(option.state, index)}
+                ref={el => buttonRefs.current[index] = el}
+                onClick={() => handleStateSelect(option.state, index)}
                 variant="outline"
                 size="lg"
                 className={cn(
                   "h-20 text-xl rounded-3xl border-2 transition-all",
-                  "hover:scale-105 active:scale-95 hover:shadow-md", // Mantenemos efectos para escritorio
+                  "hover:scale-105 active:scale-95 hover:shadow-md",
                   "justify-start px-8 gap-4"
                 )}
               >

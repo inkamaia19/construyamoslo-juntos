@@ -1,63 +1,115 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { apiFetch } from "@/lib/api";
 import { useSession } from "@/hooks/SessionContext";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 
 interface Activity {
   id: string;
   title: string;
   image_url?: string;
+  base_activity_id: string;
 }
 
 const Results = () => {
   const navigate = useNavigate();
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [childName, setChildName] = useState("");
   const { sessionId, sessionSecret, getSession } = useSession();
 
-  useEffect(() => {
-    const loadResults = async () => {
-      if (!sessionId || !sessionSecret) {
-        setLoading(false);
-        return;
-      }
+  const loadResults = useCallback(async () => {
+    setLoading(true);
+    setError(null);
 
+    if (!sessionId || !sessionSecret) {
+      setError("No se ha encontrado una sesión válida. Por favor, empieza de nuevo.");
+      setLoading(false);
+      return;
+    }
+
+    try {
       const session = await getSession();
       if (!session?.completed) {
-        // Si el onboarding no está completo, redirigir al inicio.
         navigate("/", { replace: true });
         return;
       }
       setChildName(session.child_name || "");
 
-      try {
-        const resp = await apiFetch(`/api/recommendations/${sessionId}`, {
-          headers: { "x-session-secret": sessionSecret },
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          setActivities(data?.items || []);
-        }
-      } catch (error) {
-        console.error("Error fetching recommendations:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      const resp = await apiFetch(`/api/recommendations/${sessionId}`, {
+        headers: { "x-session-secret": sessionSecret },
+      });
 
-    loadResults();
+      if (!resp.ok) {
+        throw new Error("La respuesta del servidor no fue exitosa.");
+      }
+      
+      const data = await resp.json();
+      setActivities(data?.items || []);
+    } catch (err) {
+      console.error("Error fetching recommendations:", err);
+      setError("No pudimos cargar las recomendaciones. Por favor, intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
   }, [sessionId, sessionSecret, navigate, getSession]);
+
+  useEffect(() => {
+    loadResults();
+  }, [loadResults]);
 
   const handleRestart = () => {
     localStorage.clear();
-    window.location.href = "/"; // Forzar un reseteo completo
+    window.location.href = "/";
   };
 
   const handleScheduleCall = () => {
     window.open("https://calendly.com/tu-usuario/15min", "_blank");
+  };
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-md mx-auto w-full animate-slide-up" style={{ animationDelay: "100ms" }}>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="aspect-[3/4] bg-muted rounded-3xl animate-pulse" />
+          ))}
+        </div>
+      );
+    }
+    
+    if (error) {
+      return (
+        <div className="max-w-md mx-auto w-full text-center bg-destructive/10 p-6 rounded-3xl border border-destructive/20 animate-slide-up">
+            <h3 className="font-bold text-destructive-foreground">¡Oh, no!</h3>
+            <p className="text-muted-foreground my-2">{error}</p>
+            <Button onClick={loadResults} variant="destructive">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Reintentar
+            </Button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-md mx-auto w-full animate-slide-up" style={{ animationDelay: "100ms" }}>
+        {activities.map(activity => (
+          <div
+            key={activity.id}
+            onClick={() => navigate(`/activity/${activity.base_activity_id}`)}
+            className="relative aspect-[3/4] rounded-3xl overflow-hidden cursor-pointer group bg-muted"
+          >
+            {activity.image_url && (
+              <img src={activity.image_url} alt={activity.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+            <h3 className="absolute bottom-3 left-3 right-3 text-white text-sm font-bold">{activity.title}</h3>
+          </div>
+        ))}
+      </div>
+    );
   };
 
   return (
@@ -76,27 +128,8 @@ const Results = () => {
           <p className="text-muted-foreground">Toca una actividad para ver los detalles.</p>
         </div>
 
-        <div className="grid grid-cols-3 gap-3 md:gap-4 max-w-md mx-auto w-full animate-slide-up" style={{ animationDelay: "100ms" }}>
-          {loading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-muted rounded-3xl animate-pulse" />
-            ))
-          ) : (
-            activities.map(activity => (
-              <div
-                key={activity.id}
-                onClick={() => navigate(`/activity/${activity.id}`)}
-                className="relative aspect-[3/4] rounded-3xl overflow-hidden cursor-pointer group bg-muted"
-              >
-                {activity.image_url && (
-                  <img src={activity.image_url} alt={activity.title} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                <h3 className="absolute bottom-3 left-3 right-3 text-white text-sm font-bold">{activity.title}</h3>
-              </div>
-            ))
-          )}
-        </div>
+        {renderContent()}
+
       </main>
 
       <footer className="py-4 animate-slide-up" style={{ animationDelay: "200ms" }}>

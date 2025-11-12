@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/SessionContext";
+import { cn } from "@/lib/utils";
 
 const Intro = () => {
   const navigate = useNavigate();
   const { sessionId, createSession } = useSession();
+  const [isImageLoaded, setIsImageLoaded] = useState(false);
 
   const handleContinue = async () => {
     if (!sessionId) {
@@ -15,17 +18,23 @@ const Intro = () => {
       }
     }
     
-    // Navegamos a la primera página del flujo, como debe ser.
     navigate("/parent", { replace: true });
   };
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-background animate-fade-in">
-      <header className="flex-1 min-h-[55vh] relative">
+      <header className="flex-1 min-h-[55vh] relative bg-muted">
+        {!isImageLoaded && (
+          <div className="absolute inset-0 bg-muted animate-pulse" />
+        )}
         <img
           src="/intro/hero-background.webp"
           alt="Ilustración de un niño jugando y construyendo una torre con materiales reciclados"
-          className="h-full w-full object-cover"
+          className={cn(
+            "h-full w-full object-cover transition-opacity duration-500",
+            isImageLoaded ? "opacity-100" : "opacity-0"
+          )}
+          onLoad={() => setIsImageLoaded(true)}
         />
         <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-background to-transparent" />
       </header>
