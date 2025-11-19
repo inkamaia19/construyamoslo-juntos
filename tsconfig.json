@@ -7,7 +7,7 @@
     "skipLibCheck": true,
 
     /* Bundler mode */
-    "moduleResolution": "bundler", // <-- ASEGÚRATE DE QUE ESTÉ ASÍ O SIMILAR
+    "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
@@ -20,11 +20,18 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Aliases */
+    /* Base URL and Aliases */
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": ["src", "api"], // <-- AÑADE "api" SI NO ESTÁ
+
+  /* 
+    IMPORTANT: Only include folders that actually contain TS code.
+    Including wrong paths breaks Vercel’s runtime resolver.
+  */
+  "include": ["src", "api"],
+
   "references": [{ "path": "./tsconfig.node.json" }]
 }

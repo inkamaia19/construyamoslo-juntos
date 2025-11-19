@@ -1,22 +1,12 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import crypto from "crypto";
-import { getPool } from "../_lib/db.js"; // <-- AÑADIR .js
-
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createSession } from '../../src/lib/db';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-  
-  const pool = getPool();
+  if (req.method !== "POST") return res.status(405).end();
+
   try {
-    const sessionSecret = crypto.randomBytes(16).toString("hex");
-    const { rows } = await pool.query(
-      "INSERT INTO public.onboarding_sessions (session_secret) VALUES ($1) RETURNING id, session_secret",
-      [sessionSecret]
-    );
-    return res.status(201).json(rows[0]);
-  } catch (err: any) {
-    console.error("Create session error:", err?.message || err);
-    return res.status(500).json({ error: "Failed to create session", detail: err?.message });
+    const session = await createSession();
+    return res.status(200).json(session);
+  } catch (error) {
+    return res.status(500).json({ error: "Could not create session" });
   }
 }

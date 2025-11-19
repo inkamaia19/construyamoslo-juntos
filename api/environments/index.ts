@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getInterests } from '../../src/lib/db';
+import { getEnvironments } from '../../src/lib/db';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).end();
 
-  const interests = await getInterests();
-  return res.status(200).json({ interests });
+  const env = await getEnvironments();
+  return res.status(200).json({ environments: env });
 }
