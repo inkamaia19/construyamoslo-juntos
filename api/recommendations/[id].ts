@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSessionById } from '../../src/lib/db';
-import { generateRecommendations } from '../../src/lib/recommendationEngine';
+import { getSessionById } from '../../src/lib/db.ts';
+import { generateRecommendations } from '../../src/lib/recommendationEngine.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "GET") return res.status(405).end();

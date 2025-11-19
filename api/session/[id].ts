@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSessionById, updateSession } from '../../src/lib/db';
+import { getSessionById, updateSession } from '../../src/lib/db.ts';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { id } = req.query;
